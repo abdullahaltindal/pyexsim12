@@ -590,12 +590,61 @@ class Simulation:
         return freq, fas
 
     def misfit_fas(self, site, direction):
+        """
+        Calculate the misfit in terms of Fourier spectrum, as misfit = log(recorded spectrum / simulated spectrum).
+        Args:
+            site: Site number.
+            direction: direction: Direction as defined in the Simulation.recorded_motions attribute.
+
+        Returns:
+            freq_sim: Frequencies for misfit  calculation.
+            misfit: Misfit values corresponding to frequency values in freq_sim.
+        """
         freq_sim, fas_sim = self.get_fas(site)
         freq_rec, fas_rec = self.get_recorded_fas(site, direction)
         fas_rec_ = interp1d(freq_rec, fas_rec)
         fas_rec_vals = fas_rec_(freq_sim)
         misfit = np.log(fas_rec_vals / fas_sim)
         return freq_sim, misfit
+
+    def plot_misfit_fas(self, site, direction, axis=None, plot_dict=None):
+        """
+        Plots the Fourier spectrum misfit, calculated as log(recorded spectrum / simulated spectrum)
+        Args:
+            site: Site number.
+            direction: Direction as defined in the Simulation.recorded_motions attribute.
+            axis: axis: A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
+            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+                Keys are:
+                        "color": Line color. Default is None.
+                        "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
+                        "label": Label for the legend. Default is None.
+                        "alpha": Transparency. Default is 1.0
+                        "linewidth": Line width. Default is 1.5.
+        Returns:
+            fig: If an axis input is not provided, created figure object is returned.
+        """
+        if plot_dict is None:
+            plot_dict = {}
+
+        freq, misfit = self.misfit_fas(site, direction)
+        # Unpack plotting options and set default values for missing keys:
+        color = plot_dict.get("color", None)
+        linestyle = plot_dict.get("linestyle", "solid")
+        label = plot_dict.get("label", None)
+        alpha = plot_dict.get("alpha", 1.0)
+        linewidth = plot_dict.get("linewidth", 1.5)
+
+        if axis is None:
+            fig = plt.figure()
+            plt.plot(freq, misfit, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+            plt.xlabel("Period (s)")
+            plt.ylabel("$ln(observed) / ln(simulated)$")
+            plt.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
+            return fig
+        else:
+            axis.plot(freq, misfit, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
 
     def plot_fas(self, site, axis=None, plot_dict=None):
         """
