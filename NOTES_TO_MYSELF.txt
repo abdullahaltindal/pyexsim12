@@ -1,4 +1,0 @@
-* Add (optional) to opt. parameters in docs
-* Type annotation.
-* Misfit in FAS does not work because the frequency values are different for simulated and recorded motions, because of different lengths. This can be solved with
-interpolation functions of scipy. Or, I can use the length of the simulated accelerogram while calculating the fas for the recorded motion.
