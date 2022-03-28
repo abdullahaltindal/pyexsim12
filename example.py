@@ -44,6 +44,11 @@ axs.set_yscale("log")
 sim.plot_bssa14_eps(1, 300, 1)
 sim.plot_kaah15_eps(1, 300)
 
+freq, misfit = sim.misfit_fas(1, "EW")
+plt.figure()
+plt.plot(freq, misfit)
+plt.xscale("log")
+# plt.yscale("log")
 #%%
 fig2, axs = plt.subplots()
 sim.plot_bssa14_eps(1, 300, 1, axis=axs, plot_dict={"label": "BSSA14"})

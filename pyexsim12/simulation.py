@@ -5,6 +5,7 @@ import numpy as np
 from numba import jit
 import matplotlib.pyplot as plt
 import gmm
+from scipy.interpolate import interp1d
 
 plt.interactive(True)
 
@@ -587,6 +588,14 @@ class Simulation:
         freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
         fas = np.abs(fas[:length // 2]) * dt
         return freq, fas
+
+    def misfit_fas(self, site, direction):
+        freq_sim, fas_sim = self.get_fas(site)
+        freq_rec, fas_rec = self.get_recorded_fas(site, direction)
+        fas_rec_ = interp1d(freq_rec, fas_rec)
+        fas_rec_vals = fas_rec_(freq_sim)
+        misfit = np.log(fas_rec_vals / fas_sim)
+        return freq_sim, misfit
 
     def plot_fas(self, site, axis=None, plot_dict=None):
         """
