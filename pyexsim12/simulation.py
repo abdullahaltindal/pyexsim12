@@ -6,6 +6,7 @@ from numba import jit
 import matplotlib.pyplot as plt
 import gmm
 from scipy.interpolate import interp1d
+import pandas as pd
 
 plt.interactive(True)
 
@@ -37,14 +38,14 @@ class Simulation:
         if self.misc.inputs_filename is None:
             self.misc.inputs_filename = self.create_stem() + ".in"
 
-        self._recorded_motions = {}  # Initialize recorded motions attribute
+        self._rec_motions = {}  # Initialize recorded motions attribute
 
     def __str__(self):
         return f"Filename stem: {self.misc.stem} \n " \
                f"Inputs filename: {self.misc.inputs_filename}"
 
     @property
-    def recorded_motions(self):
+    def rec_motions(self):
         """
         Store recorded ground motion at a site.
         Args:
@@ -54,15 +55,15 @@ class Simulation:
             direction can be any variable, such as "EW", or simply an integer.
             User should use the same direction value to later refer to the recorded motions.
         Returns: Dictionary of recorded motions updated with the new value. Recorded motions can be accessed as:
-                 Simulation.recorded_motions[site_no, direction], which returns (acceleration_record, time_step)
+                 Simulation.rec_motions[site_no, direction], which returns (acceleration_record, time_step)
         Example use:
-            Simulation.recorded_motions = (1, "EW", recorded_acc, 0.005)
+            Simulation.rec_motions = (1, "EW", recorded_acc, 0.005)
 
         """
-        return self._recorded_motions
+        return self._rec_motions
 
-    @recorded_motions.setter
-    def recorded_motions(self, value):
+    @rec_motions.setter
+    def rec_motions(self, value):
         """
         Store recorded ground motion at a site.
         Args:
@@ -72,10 +73,10 @@ class Simulation:
                    direction can be any variable, such as "EW", or simply an integer.
                    User should use the same direction value to later refer to the recorded motions.
         Returns: Dictionary of recorded motions updated with the new value. Recorded motions can be accessed as:
-                 Simulation.recorded_motions[site_no, direction], which returns (acceleration_record, time_step)
+                 Simulation.rec_motions[site_no, direction], which returns (acceleration_record, time_step)
 
         """
-        dct = self._recorded_motions
+        dct = self._rec_motions
         site_no, direction, acceleration_record, time_step = value
         if not isinstance(acceleration_record, np.ndarray):
             raise TypeError("Recorded motion should be a numpy.ndarray object. This is enforced to ensure "
@@ -83,7 +84,7 @@ class Simulation:
                             "with numba.jit decorator."
                             )
         dct[site_no, direction] = acceleration_record, time_step
-        self._recorded_motions = dct
+        self._rec_motions = dct
 
     def create_stem(self):
         """
@@ -124,7 +125,7 @@ class Simulation:
             s += ' '
         return ' ' * pad + s
 
-    def create_input_file(self, save=False):
+    def create_input_file(self, save=True):
         """
         Creates EXSIM12 input file for the Simulation object.
         Args:
@@ -243,9 +244,9 @@ class Simulation:
         """
         Run EXSIM12 with the prepared inputs file for the Simulation object.
         Args:
-            override: If True, the simulation will run without checking if a simulation for the Simulation object has
-            been run before. If False, simulation will only run if the simulation for the Simulation object has not been
-            run before.
+            override (bool): If True, the simulation will run without checking if a simulation for the Simulation object
+             has been run before. If False, simulation will only run if the simulation for the Simulation object has not
+             been run before.
         """
         inputs_filename = self.misc.inputs_filename
         exsim_folder = self.misc.exsim_folder
@@ -265,7 +266,7 @@ class Simulation:
         """
         Returns the simulated acceleration history and time arrays for the given site. Units in cm/s/s
         Args:
-            site: Site number
+            site (int):  Site number
 
         Returns:
             time: Time array in s
@@ -291,7 +292,8 @@ class Simulation:
         Args:
             site (int): Site number.
             axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            plot_dict (dict):  (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
@@ -323,15 +325,16 @@ class Simulation:
         else:
             axis.plot(time, acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
 
-    def plot_recorded_acc(self, site, direction, axis=None, plot_dict=None):
+    def plot_rec_acc(self, site, direction, axis=None, plot_dict=None):
         """
         Plot the recorded acceleration history at a site for a given direction. After running the plot_acc method, the
         user can modify the created plot or axis with all the functionalities of the matplotlib.pyplot module.
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
@@ -343,8 +346,8 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        if (site, direction) not in self.recorded_motions.keys():
-            raise Exception("Record not found on Simulation.recorded_motions")
+        if (site, direction) not in self.rec_motions.keys():
+            raise Exception("Record not found on Simulation.rec_motions")
 
         # Unpack plotting options and set default values for missing keys:
         color = plot_dict.get("color", None)
@@ -353,7 +356,7 @@ class Simulation:
         alpha = plot_dict.get("alpha", 1.0)
         linewidth = plot_dict.get("linewidth", 1.5)
 
-        acc, dt = self.recorded_motions[site, direction]
+        acc, dt = self.rec_motions[site, direction]
         time = np.arange(0, dt * len(acc), dt)
         if axis is None:
             fig = plt.figure()
@@ -369,8 +372,8 @@ class Simulation:
         Calculates the response spectrum for the Simulation object at the given site.
         Returns the periods and spectral acceleration values.
         Args:
-            periods: Periods for spectral acceleration calculation.
-            site: Site number.
+            site (int):  Site number.
+            periods: (optional) Periods for spectral acceleration calculation.
 
         Returns:
             periods: Vibration periods for spectral acceleration calculation.
@@ -385,20 +388,20 @@ class Simulation:
         spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
 
-    def get_recorded_rp(self, site, direction, periods=None):
+    def get_rec_rp(self, site, direction, periods=None):
         """
         Calculates the response spectrum for the recorded motion at the given site.
         Returns the periods and spectral acceleration values.
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            periods: Periods for spectral acceleration calculation.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            periods: (optional) Periods for spectral acceleration calculation.
 
         Returns:
             periods: Vibration periods for spectral acceleration calculation.
             spec_acc: Spectral acceleration values in cm/s/s
         """
-        acc_g, dt = self.recorded_motions[site, direction]
+        acc_g, dt = self.rec_motions[site, direction]
         if periods is None:
             periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
                                       np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
@@ -410,28 +413,29 @@ class Simulation:
         """
         Calculate the misfit in terms of response spectrum, as misfit = log(recorded spectrum / simulated spectrum).
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            periods: Periods for misfit calculation.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            periods: (optional) Periods for misfit calculation.
 
         Returns:
             periods: Periods for misfit  calculation.
             misfit: Misfit values corresponding to period values in periods.
         """
         periods, rp_sim = self.get_rp(site, periods)
-        _, rp_recorded = self.get_recorded_rp(site, direction, periods)
-        misfit = np.log(rp_recorded / rp_sim)
+        _, rp_rec = self.get_rec_rp(site, direction, periods)
+        misfit = np.log(rp_rec / rp_sim)
         return periods, misfit
 
     def plot_misfit_rp(self, site, direction, periods=None, axis=None, plot_dict=None):
         """
         Plots the response spectrum misfit, calculated as log(recorded spectrum / simulated spectrum)
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            periods: Periods for misfit calculation.
-            axis: A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            periods: (optional) Periods for misfit calculation.
+            axis (plt.axes): A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
@@ -473,10 +477,11 @@ class Simulation:
         can modify the created plot or axis with all the functionalities of the matplotlib.pyplot module.
 
         Args:
-            site: Site number.
-            periods: Periods for spectral acceleration calculation.
-            axis: A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            periods: (optional) Periods for spectral acceleration calculation.
+            axis (plt.axes): A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
@@ -508,17 +513,18 @@ class Simulation:
         else:
             axis.plot(periods, spec_acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
 
-    def plot_recorded_rp(self, site, direction, periods=None, axis=None, plot_dict=None):
+    def plot_rec_rp(self, site, direction, periods=None, axis=None, plot_dict=None):
         """
         Plot the response spectrum of the recorded motion at a site for a given direction. After running the plot_rp
         method, the user can modify the created plot or axis with all the functionalities of the matplotlib.pyplot
         module.
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            periods: Periods for spectral acceleration calculation.
-            axis: A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            periods: (optional) Periods for spectral acceleration calculation.
+            axis (plt.axes): A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
@@ -541,7 +547,7 @@ class Simulation:
         if periods is None:
             periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
                                       np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
-        periods, spec_acc = self.get_recorded_rp(site, direction, periods)
+        periods, spec_acc = self.get_rec_rp(site, direction, periods)
         if axis is None:
             fig = plt.figure()
             plt.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -551,14 +557,15 @@ class Simulation:
         else:
             axis.plot(periods, spec_acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
 
-    def get_fas(self, site):
+    def get_fas(self, site, smooth=True, roll=9):
         """
         Get the Fourier amplitude spectrum of the simulated motion by fast Fourier transformation algorithm at a given
         site.
 
         Args:
-            site: Site number.
-
+            site (int):  Site number.
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             freq: Frequency values in Hz.
             fas: Fourier amplitudes in cm/s.
@@ -569,65 +576,75 @@ class Simulation:
         fas = np.fft.fft(acc_g)
         freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
         fas = np.abs(fas[:length // 2]) * dt
+        if smooth:
+            fas = pd.Series(fas).rolling(roll).mean()
         return freq, fas
 
-    def get_recorded_fas(self, site, direction):
+    def get_rec_fas(self, site, direction, smooth=True, roll=9):
         """
         Get the Fourier amplitude spectrum of the recorded motion by fast Fourier transformation algorithm at a given
         site.
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             freq: Frequency values in Hz.
             fas: Fourier amplitudes in cm/s.
         """
-        acc_g, dt = self.recorded_motions[site, direction]
+        acc_g, dt = self.rec_motions[site, direction]
         length = len(acc_g)
         fas = np.fft.fft(acc_g)
         freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
         fas = np.abs(fas[:length // 2]) * dt
+        if smooth:
+            fas = pd.Series(fas).rolling(roll).mean()
         return freq, fas
 
-    def misfit_fas(self, site, direction):
+    def misfit_fas(self, site, direction, smooth=True, roll=9):
         """
         Calculate the misfit in terms of Fourier spectrum, as misfit = log(recorded spectrum / simulated spectrum).
         Args:
-            site: Site number.
-            direction: direction: Direction as defined in the Simulation.recorded_motions attribute.
-
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             freq_sim: Frequencies for misfit  calculation.
             misfit: Misfit values corresponding to frequency values in freq_sim.
         """
-        freq_sim, fas_sim = self.get_fas(site)
-        freq_rec, fas_rec = self.get_recorded_fas(site, direction)
+        freq_sim, fas_sim = self.get_fas(site, smooth, roll)
+        freq_rec, fas_rec = self.get_rec_fas(site, direction, smooth, roll)
         fas_rec_ = interp1d(freq_rec, fas_rec)
         fas_rec_vals = fas_rec_(freq_sim)
         misfit = np.log(fas_rec_vals / fas_sim)
         return freq_sim, misfit
 
-    def plot_misfit_fas(self, site, direction, axis=None, plot_dict=None):
+    def plot_misfit_fas(self, site, direction, axis=None, plot_dict=None, smooth=True, roll=9):
         """
         Plots the Fourier spectrum misfit, calculated as log(recorded spectrum / simulated spectrum)
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            axis: axis: A matplotlib axes object. If provided, response spectrum is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            axis (plt.axes):  matplotlib axes object. If provided, response spectrum is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
                         "label": Label for the legend. Default is None.
                         "alpha": Transparency. Default is 1.0
                         "linewidth": Line width. Default is 1.5.
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
         if plot_dict is None:
             plot_dict = {}
 
-        freq, misfit = self.misfit_fas(site, direction)
+        freq, misfit = self.misfit_fas(site, direction, smooth, roll)
         # Unpack plotting options and set default values for missing keys:
         color = plot_dict.get("color", None)
         linestyle = plot_dict.get("linestyle", "solid")
@@ -641,27 +658,31 @@ class Simulation:
             plt.xlabel("Period (s)")
             plt.ylabel("$ln(observed) / ln(simulated)$")
             plt.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
+            plt.xlim(left=0, right=50)
             return fig
         else:
             axis.plot(freq, misfit, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
+            axis.set_xlim(left=0, right=50)
 
-    def plot_fas(self, site, axis=None, plot_dict=None):
+    def plot_fas(self, site, axis=None, plot_dict=None, smooth=True, roll=9):
         """
         Plot the Fourier amplitude spectrum of the simulated motion at a site. After running the plot_fas method, the
         user can modify the created plot or axis with all the functionalities of the matplotlib.pyplot module.
 
         Args:
-            site: Site number.
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
                         "label": Label for the legend. Default is None.
                         "alpha": Transparency. Default is 1.0
                         "linewidth": Line width. Default is 1.5.
-
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
@@ -675,7 +696,7 @@ class Simulation:
         alpha = plot_dict.get("alpha", 1.0)
         linewidth = plot_dict.get("linewidth", 1.5)
 
-        freq, fas = self.get_fas(site)
+        freq, fas = self.get_fas(site, smooth, roll)
         if axis is None:
             fig = plt.figure()
             plt.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -689,22 +710,25 @@ class Simulation:
             axis.set_xscale("log")
             axis.set_yscale("log")
 
-    def plot_recorded_fas(self, site, direction, axis=None, plot_dict=None):
+    def plot_rec_fas(self, site, direction, axis=None, plot_dict=None, smooth=True, roll=9):
         """
         Plot the Fourier amplitude spectrum of the recorded motion at a site for a given direction. After running the
         plot_fas method, the user can modify the created plot or axis with all the functionalities of the
         matplotlib.pyplot module.
         Args:
-            site: Site number.
-            direction: Direction as defined in the Simulation.recorded_motions attribute.
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            site (int):  Site number.
+            direction: Direction as defined in the Simulation.rec_motions attribute.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
                         "label": Label for the legend. Default is None.
                         "alpha": Transparency. Default is 1.0
                         "linewidth": Line width. Default is 1.5.
+            smooth: If True, spectrum is smoothed with moving-average method. Default is True.
+            roll: Window size for moving-average smoothing. Default is 9.
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
@@ -717,7 +741,7 @@ class Simulation:
         alpha = plot_dict.get("alpha", 1.0)
         linewidth = plot_dict.get("linewidth", 1.5)
 
-        freq, fas = self.get_recorded_fas(site, direction)
+        freq, fas = self.get_rec_fas(site, direction, smooth, roll)
         if axis is None:
             fig = plt.figure()
             plt.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -735,7 +759,7 @@ class Simulation:
         """
         Get Joyner-Boore distance for a site.
         Args:
-            site: Site number.
+            site (int):  Site number.
 
         Returns:
             rjb: Joyner-Boore distance (km).
@@ -753,15 +777,15 @@ class Simulation:
             rjb = float(temp[13].split("   ")[-1])
         return rjb
 
-    def bssa14(self, site, vs30, region, *, mech=None, z1=None, unit="cm", pm_sigma=True):
+    def bssa14(self, site, vs30, region=1, *, mech=None, z1=None, unit="cm", pm_sigma=True):
         """
         Calculate the estimated response spectrum for the rupture scenario at the using the GMM of BSSA14. This function
         gets some model parameters from the Simulation object. To use BSSA14 model for different inputs, see the gmm
         module. Corresponding periods can be obtained from the gmm module as gmm.bssa14.periods.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s).
-            region: (0: Global, 1: Turkey & China, 2: Italy & Japan).
+            region: (0: Global, 1: Turkey & China, 2: Italy & Japan). Default is 1.
             mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse).
             z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon.
             unit: "cm" for cm/s/s, "g", for g.
@@ -791,21 +815,22 @@ class Simulation:
             sgm_ln_sa = np.array([gmm.bssa14.bssa14_sigma(mw, rjb, vs30, t) for t in gmm.bssa14.periods])
             return sa, sgm_ln_sa
 
-    def plot_bssa14(self, site, vs30, region, *, mech=None, z1=None, unit="cm", pm_sigma=True, axis=None,
+    def plot_bssa14(self, site, vs30, region=1, *, mech=None, z1=None, unit="cm", pm_sigma=True, axis=None,
                     plot_dict=None):
         """
         Plot the estimated response spectrum for the rupture scenario at the using the GMM of BSSA14. This function gets
         some model parameters from the Simulation object. To use BSSA14 model for different inputs, see the gmm module.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s)
-            region: (0: Global, 1: Turkey & China, 2: Italy & Japan)
+            region: (0: Global, 1: Turkey & China, 2: Italy & Japan). Default is 1.
             mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse)
             z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon
             unit: "cm" for cm/s/s, "g", for g.
             pm_sigma: When True, also plots plus-minus standard deviation with dashed lines.
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
@@ -866,13 +891,13 @@ class Simulation:
         gets some model parameters from the Simulation object. To use BSSA14 model for different inputs, see the gmm
         module. Corresponding periods can be obtained from the gmm module as gmm.kaah15.periods.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s)
             mech: (optional) Faulting mechanism (SS: Strike-slip, N: Normal, R: Reverse). If None, gets the mechanism
                   from the Simulation object. If the mechanism is undefined in the Simulation object, raises an
-                  Exception.
-            unit: "cm" for cm/s/s, "g", for g.
-            pm_sigma: If True, plus-minus standard deviation values are also returned.
+                  Exception. Default is None.
+            unit: "cm" for cm/s/s, "g", for g. Default is "cm".
+            pm_sigma: If True, plus-minus standard deviation values are also returned. Default is True.
 
         Returns:
             If pm_sigma is True:
@@ -904,15 +929,16 @@ class Simulation:
         Plot the estimated response spectrum for the rupture scenario at the using the GMM of KAAH15. This function gets
         some model parameters from the Simulation object. To use KAAH15 model for different inputs, see the gmm module.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s)
             mech: (optional) Faulting mechanism (SS: Strike-slip, N: Normal, R: Reverse). If None, gets the mechanism
                   from the Simulation object. If the mechanism is undefined in the Simulation object, raises an
-                  Exception.
-            unit: "cm" for cm/s/s, "g", for g.
-            pm_sigma: When True, also plots plus-minus standard deviation with dashed lines.
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+                  Exception. Default is None.
+            unit: "cm" for cm/s/s, "g", for g. Default is "cm".
+            pm_sigma: When True, also plots plus-minus standard deviation with dashed lines. Default is True.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict):  (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
@@ -967,16 +993,16 @@ class Simulation:
                 axis.plot(gmm.kaah15.periods, m_sigma, alpha=alpha, color=color,
                           linestyle=linestyle_pm, linewidth=linewidth_pm)
     
-    def bssa14_eps(self, site, vs30, region, *, mech=None, z1=None):
+    def bssa14_eps(self, site, vs30, region=1, *, mech=None, z1=None):
         """
         Calculates epsilon (normalized residual) values for the BSSA14 GMM. Corresponding periods can be obtained from
         the gmm module as gmm.bssa14.periods.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s).
-            region: (0: Global, 1: Turkey & China, 2: Italy & Japan).
-            mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse).
-            z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon.
+            region: (0: Global, 1: Turkey & China, 2: Italy & Japan). Default is 1.
+            mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse). Default is None.
+            z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon. Default is None.
 
         Returns:
             epsilon: Epsilon values.
@@ -1004,11 +1030,11 @@ class Simulation:
         Calculates epsilon (normalized residual) values for the KAAH15 GMM. Corresponding periods can be obtained from
         the gmm module as gmm.kaah15.periods.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: Vs30 (m/s).
             mech: (optional) Faulting mechanism (SS: Strike-slip, N: Normal, R: Reverse). If None, gets the mechanism
                   from the Simulation object. If the mechanism is undefined in the Simulation object, raises an
-                  Exception.
+                  Exception. Default is None.
 
         Returns:
             epsilon: Epsilon values.
@@ -1031,19 +1057,20 @@ class Simulation:
         epsilon = (ln_sa - ln_kaah15) / sgm
         return epsilon
 
-    def plot_bssa14_eps(self, site, vs30, region, *, axis=None, mech=None, z1=None, plot_dict=None):
+    def plot_bssa14_eps(self, site, vs30, region=1, *, axis=None, mech=None, z1=None, plot_dict=None):
         """
         Plots the epsilon (normalized residual) values for the BSSA14 GMM against vibration period.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: vs30: Vs30 (m/s)
             region: (0: Global, 1: Turkey & China, 2: Italy & Japan)
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
             mech: (optional) Faulting mechanism (SS: Strike-slip, N: Normal, R: Reverse). If None, gets the mechanism
                   from the Simulation object. If the mechanism is undefined in the Simulation object, raises an
-                  Exception.
-            z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+                  Exception. Default is None.
+            z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon. Default is None.
+            plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
@@ -1080,11 +1107,12 @@ class Simulation:
         """
         Plots the epsilon (normalized residual) values for the KAAH15 GMM against vibration period.
         Args:
-            site: Site number.
+            site (int):  Site number.
             vs30: vs30: Vs30 (m/s)
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
             mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse)
-            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+            plot_dict (dict):  (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
                 Keys are:
                         "color": Line color. Default is None.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
@@ -1127,9 +1155,9 @@ def newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
         acc_g: Ground acceleration
         dt: Time step
         period: Period of the SDOF system.
-        ksi: Damping ratio. Default value is 0.05.
-        beta: Beta parameter for the numerical calculation. Default value is 0.25.
-        gamma: Gamma parameter for the numerical calculation. Default value is 0.5.
+        ksi: Damping ratio. Default is 0.05.
+        beta: Beta parameter for the numerical calculation. Default is 0.25.
+        gamma: Gamma parameter for the numerical calculation. Default is 0.5.
 
     Returns:
         disp: Ground displacement.
@@ -1173,9 +1201,9 @@ def spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
         acc_g: Ground acceleration.
         dt: Time step
         period: Period of the SDOF system.
-        ksi: Damping ratio. Default value is 0.05.
-        beta: Beta parameter for the numerical calculation. Default value is 0.25.
-        gamma: Gamma parameter for the numerical calculation. Default value is 0.5.
+        ksi: Damping ratio. Default is 0.05.
+        beta: Beta parameter for the numerical calculation. Default is 0.25.
+        gamma: Gamma parameter for the numerical calculation. Default is 0.5.
 
     Returns:
         sa: Spectral acceleration.

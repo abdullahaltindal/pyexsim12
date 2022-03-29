@@ -86,20 +86,33 @@ class GeometricSpreading:
         self.n_seg = n_seg
         self.spread = spread
 
-    def plot(self, axis=None, color="black", linestyle="solid", label=None, alpha=1.0, title="Geometric Spreading"):
+    def plot(self, axis=None, plot_dict=None):
         """
         Plots the geometric spreading function against distance.
         Args:
-            axis: A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
-            color: Line color as input to matplotlib.pyplot.plot() function. Default is "black".
-            linestyle: Line style as input to matplotlib.pyplot.plot() function. Default is "solid".
-            label: Label as input to matplotlib.pyplot.plot() function. Default is None.
-            alpha: Alpha (transparency) value as input to matplotlib.pyplot.plot() function. Default is 1.0.
-            title: Title of the plot. Default is "Fourier Amplitude Spectrum".
-
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+                Keys are:
+                        "color": Line color. Default is None.
+                        "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
+                        "label": Label for the legend. Default is None.
+                        "alpha": Transparency. Default is 1.0
+                        "linewidth": Line width. Default is 1.5.
+                        "title": Title for the plot. Default is "Geometric Spreading".
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
+        if plot_dict is None:
+            plot_dict = {}
+
+        # Unpack plotting options and set default values for missing keys:
+        color = plot_dict.get("color", None)
+        linestyle = plot_dict.get("linestyle", "solid")
+        label = plot_dict.get("label", None)
+        alpha = plot_dict.get("alpha", 1.0)
+        linewidth = plot_dict.get("linewidth", 1.5)
+        title = plot_dict.get("title", "Geometric Spreading")
+
         spread = self.spread
         distances = np.array([])
         geom_spread = np.array([])
@@ -115,13 +128,15 @@ class GeometricSpreading:
 
         if axis is None:
             fig = plt.figure()
-            plt.plot(distances, geom_spread, label=label, color=color, linestyle=linestyle, alpha=alpha)
+            plt.plot(distances, geom_spread, label=label, color=color, linestyle=linestyle, alpha=alpha,
+                     linewidth=linewidth)
             plt.title(title)
             plt.xlabel("Distance (km)")
             plt.ylabel("Geometric Spreading")
             return fig
         else:
-            axis.plot(distances, geom_spread, label=label, color=color, linestyle=linestyle, alpha=alpha)
+            axis.plot(distances, geom_spread, label=label, color=color, linestyle=linestyle, alpha=alpha,
+                      linewidth=linewidth)
             axis.set_title(title)
 
 
@@ -144,7 +159,34 @@ class QualityFactor:
     def __iter__(self):
         return iter([self.q_min, self.q_zero, self.eta])
 
-    def plot(self, axis=None, color="black", linestyle="solid", label=None, alpha=1.0, title="Quality Factor"):
+    def plot(self, axis=None, plot_dict=None):
+        """
+        Plots the quality factor function against distance.
+        Args:
+            axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
+            plot_dict (dict): A dict that contains plotting options. Missing keys are replaced with default values.
+                Keys are:
+                        "color": Line color. Default is None.
+                        "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
+                        "label": Label for the legend. Default is None.
+                        "alpha": Transparency. Default is 1.0
+                        "linewidth": Line width. Default is 1.5.
+                        "title": Title for the plot. Default is "Quality Factor".
+        Returns:
+            fig: If an axis input is not provided, created figure object is returned.
+
+        """
+        if plot_dict is None:
+            plot_dict = {}
+
+        # Unpack plotting options and set default values for missing keys:
+        color = plot_dict.get("color", None)
+        linestyle = plot_dict.get("linestyle", "solid")
+        label = plot_dict.get("label", None)
+        alpha = plot_dict.get("alpha", 1.0)
+        linewidth = plot_dict.get("linewidth", 1.5)
+        title = plot_dict.get("title", "Quality Factor")
+
         q_min = self.q_min
         q_zero = self.q_zero
         eta = self.eta
@@ -153,13 +195,15 @@ class QualityFactor:
         qf = np.maximum(q_min_array, q_zero * frequency ** eta)
         if axis is None:
             fig = plt.figure()
-            plt.plot(frequency, qf, label=label, color=color, linestyle=linestyle, alpha=alpha)
+            plt.plot(frequency, qf, label=label, color=color, linestyle=linestyle, alpha=alpha,
+                     linewidth=linewidth)
             plt.title(title)
             plt.xlabel("Frequency (Hz)")
             plt.ylabel("Quality Factor")
             return fig
         else:
-            axis.plot(frequency, qf, label=label, color=color, linestyle=linestyle, alpha=alpha)
+            axis.plot(frequency, qf, label=label, color=color, linestyle=linestyle, alpha=alpha,
+                      linewidth=linewidth)
             axis.set_title(title)
 
     def __str__(self):
