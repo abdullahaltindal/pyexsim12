@@ -1145,6 +1145,36 @@ class Simulation:
             axis.plot(periods, epsilon, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
 
+    def create_amp(self, freq, amp, filename, header=None):
+        """
+        Create the amplification file for site or crustal amplification.
+        Args:
+            freq: Frequency values in Hz.
+            amp: Amplification values.
+            filename: Filename for the amplification file.
+            header (str): Header for the amplification file which will be printed at the start of the file.
+
+        Returns:
+            None.
+        """
+        if header is None:
+            header = "Site, crustal or empirical filter file for EXSIM12"
+
+        if len(freq) != len(amp):
+            raise ValueError("freq and amp must have the same length.")
+
+        nfreq = len(freq)
+        exsim_folder = self.misc.exsim_folder
+        with open(f"./{exsim_folder}/{filename}", "w") as f:
+            f.write(f"! {header} \n")
+            f.write(f"{nfreq}\t!nfrequencies\n")
+            for freq_, amp_ in zip(freq, amp):
+                f.write(f"{freq_:.4f} \t {amp_:.4f}\n")
+
+    def create_slip_weights(self, slip):
+        exsim_folder = self.misc.exsim_folder
+        np.savetxt()
+
 
 @jit()
 def newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):

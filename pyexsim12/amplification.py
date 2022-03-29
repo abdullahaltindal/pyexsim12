@@ -118,29 +118,4 @@ class Amplification:
                       linestyle=linestyle, alpha=alpha, linewidth=linewidth)
 
 
-def create_amp(freq, amp, filename, exsim_folder="exsim12", header=None):
-    """
-    Create the amplification file for site or crustal amplification.
-    Args:
-        freq: Frequency values in Hz.
-        amp: Amplification values.
-        filename: Filename for the amplification file.
-        exsim_folder (str): Folder name where EXSIM12 is stored.
-        header (str): Header for the amplification file which will be printed at the start of the file.
 
-    Returns:
-        None.
-    """
-    if header is None:
-        header = "Site, crustal or empirical filter file for EXSIM12"
-    
-    if len(freq) != len(amp):
-        raise ValueError("freq and amp must have the same length.")
-
-    nfreq = len(freq)
-    
-    with open(f"./{exsim_folder}/{filename}", "w") as f:
-        f.write(f"! {header} \n")
-        f.write(f"{nfreq}\t!nfrequencies\n")
-        for freq_, amp_ in zip(freq, amp):
-            f.write(f"{freq_:.4f} \t {amp_:.4f}\n")
