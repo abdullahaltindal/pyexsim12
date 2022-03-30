@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import gmm
 from scipy.interpolate import interp1d
 import pandas as pd
+from scipy import signal
 
 plt.interactive(True)
 
@@ -262,27 +263,49 @@ class Simulation:
             if not self.has_run():
                 os.system(f"cd {exsim_folder} & EXSIM12.exe {inputs_filename}")
 
-    def get_acc(self, site):
+    def get_acc(self, site, filt_dict=None):
         """
         Returns the simulated acceleration history and time arrays for the given site. Units in cm/s/s
         Args:
-            site (int):  Site number
+            site (int): Site number
+            filt_dict: Dictionary containing filter properties. If False, no filtering operations will be applied.
+            Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
+                "N": The order of the filter. Default is 4.
+                "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+                       bandpass and bandstop filters, Wn is a length-2 sequence.
+                "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
+                                Default is 'bandpass'.
+                "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
+                tapered region.
 
         Returns:
             time: Time array in s
             acc: Acceleration array in cm/s/s
         """
+        # Unpack filter properties
+        filt_dict.get("N", 4)
+        filt_dict.get("Wn", [0.01, 0.5])
+        filt_dict.get("btype", "bandpass")
+        filt_dict.get("tukey", 0.05)
+
         exsim_folder = self.misc.exsim_folder
-        if self.has_run():
+        if not self.has_run():
+            raise Exception("The simulation has not been run for the Simulation object. Please run it first "
+                            "using Simulation.run() method.")
+        else:
             stem = self.misc.stem
             filename = f"{stem}S{str(site).zfill(3)}iter001.acc"
             acc_data = np.genfromtxt(f"./{exsim_folder}/ACC/{filename}", skip_header=16)
             time = acc_data[:, 0]
             acc = acc_data[:, 1]
-            return time, acc
-        else:
-            raise Exception("The simulation has not been run for the Simulation object. Please run it first "
-                            "using Simulation.run() method.")
+            if filt_dict is False:
+                return time, acc
+            else:
+                b, a = signal.butter(N=filt_dict["N"], Wn=filt_dict["Wn"], btype=filt_dict["btype"])
+                filt_acc = signal.filtfilt(b, a, acc)
+                tukey = signal.tukey(len(filt_acc), filt_dict["tukey"])
+                filt_acc = tukey * filt_acc
+                return time, filt_acc
 
     def plot_acc(self, site, axis=None, plot_dict=None):
         """

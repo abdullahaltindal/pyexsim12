@@ -1,0 +1,4 @@
+* Prepare a proper example file showing all functionalities, add another file to test stuff.
+	* Prepare and plot amplifications.
+
+* FILTER???
