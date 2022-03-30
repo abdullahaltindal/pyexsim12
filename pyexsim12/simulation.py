@@ -1171,9 +1171,21 @@ class Simulation:
             for freq_, amp_ in zip(freq, amp):
                 f.write(f"{freq_:.4f} \t {amp_:.4f}\n")
 
-    def create_slip_weights(self, slip):
+    def create_slip_file(self, slip_matrix, filename):
+        """
+        Creates the input file for slip weights.
+        Args:
+            slip_matrix (np.ndarray): A multidimensional array containing slip values. It is important that the
+                                      dimensions of slip_matrix match the number of subfaults along the length and
+                                      width.
+            filename (str): Filename for the input slip weights file.
+
+        Returns:
+            filename (str): Filename for the input slip weights file.
+        """
         exsim_folder = self.misc.exsim_folder
-        np.savetxt()
+        np.savetxt(f"./{exsim_folder}/{filename}", slip_matrix, fmt="%1.3f", delimiter="\t")
+        return filename
 
 
 @jit()

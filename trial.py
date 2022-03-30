@@ -25,7 +25,7 @@ sites = Sites([(40.85, 31.17)])
 sim = Simulation(source, path, amplification, misc, sites)
 
 sim.create_input_file(save=True)
-sim.run()
+sim.run(override=True)
 duzce_recorded = pd.read_csv("duzce_recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)
 recorded_ew = np.array(duzce_recorded["EW"])
 recorded_ns = np.array(duzce_recorded["NS"])
@@ -43,6 +43,7 @@ plt.xlim(left=0.1, right=50)
 #                  [0.1, 0.1, 0.3, 0.45, 0.5, 0.7, 1.0, 1.2, 1.2, 0.6, 0.3, 0.2, 0.1]
 #                  ])
 
-slip = np.array([[0.441, 0.801, 0.986],
+slip = np.array([[0.745, 0.801, 0.986],
                  [0.097, 0.561, 0.406]])
-np.savetxt("filename.txt", slip, fmt="%1.3f", delimiter="\t")
+# np.savetxt("filename.txt", slip, fmt="%1.3f", delimiter="\t")
+sim.create_slip_file(slip, "filename.txt")

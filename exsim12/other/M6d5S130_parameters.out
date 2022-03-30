@@ -12,7 +12,7 @@ No.of subs along dip      =        2
 subfault length           =    10.00
 subfault width            =     5.00
 i_rise_time (1=orig,2=1/f0) =  1
-iseed, nsims =   1797759799    3
+iseed, nsims =   1911833850    1
 -----------------------------------------------
 input hypocenter at position    =   4.500E+00  1.500E+00
 input hypocenter at subfault    =    1   1
@@ -59,9 +59,8 @@ Analytical Flag is  OFF   =     0
  
 tpadl, tpadt, dt(sec)                     :    50.000    20.000     0.002
 For site   1 siteLocation coordinates 1&2 =      0.36     0.01
-For site   2 siteLocation coordinates 1&2 =      0.72     0.01
 Site may have been moved to midpoint or end of surface projection of upper edge of fault
  
  The slip distribution is: 
-   0.441     0.801     0.986
-   0.097     0.561     0.406
+   0.682     0.733     0.903
+   0.089     0.514     0.372

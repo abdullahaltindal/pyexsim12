@@ -99,7 +99,7 @@ class Rupture:
     Fault rupture parameters
     """
 
-    def __init__(self, vrup_beta, risetime=1, i_slip_weight=1, slip_weights="slip_weights.txt"):
+    def __init__(self, vrup_beta, risetime=1, i_slip_weight=0, slip_weights="slip_weights.txt"):
         """
 
         Args:
@@ -107,7 +107,8 @@ class Rupture:
             risetime: Type of risetime. (1=original, 2=1/f0)
             i_slip_weight: -1: Unity slip for all subfaults
                             0: Specify slips from the text file
-                            1: Random weights
+                            1: Random weights.
+                            Default is 0.
             slip_weights: Filename of the slip weights.
         """
         self.vrup_beta = vrup_beta
