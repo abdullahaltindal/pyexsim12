@@ -28,27 +28,6 @@ class Source:
         return f"Mw: {mw}\nStress drop: {stress_drop} bars\nkappa: {kappa} s\n" \
                f"Strike: {strike}°\nDip: {dip}°\nDepth: {depth} km"
 
-    def plot_slip(self, exsim_folder="exsim12", figsize=None):
-        """
-        Plots the slip distribution in a heatmap.
-        Args:
-            exsim_folder: Folder name where EXSIM12.exe and other relevant files are located.
-            figsize (tuple): A tuple containing relative size of the figure, like (width, heigth)
-        Returns:
-            fig: Figure object containing the plot.
-        """
-        slip_matrix = np.genfromtxt(f"{exsim_folder}/{self.rupture.slip_weights}")
-        if figsize is None:
-            length, width, d_length, d_width, _ = self.fault_geom.len_width
-            subf_no_l = length / d_length  # Number of subfaults along the length
-            subf_no_w = width / d_width  # Number of subfaults along the dip
-            figsize = (subf_no_l, subf_no_w)
-        fig = plt.figure(figsize=figsize)
-        plt.imshow(slip_matrix, cmap="jet")
-        plt.colorbar(fraction=0.046, pad=0.03)
-        plt.xlabel("Subfault No. (Down dip)", fontsize=14)
-        plt.ylabel("Subfault No. (Along length)", fontsize=14)
-        return fig
 
 class SourceSpec:
     """

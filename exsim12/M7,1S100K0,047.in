@@ -72,9 +72,9 @@
 !Output file names stem:
   M7,1S100K0,047 
 !Name of crustal amplification file:
-  crustal_amp_tutorial.txt 
+  crustal_dzc.txt 
 !Name of site amplification file:
-  site_amp_tutorial.txt 
+  site_amps_dzc.txt 
 !Name of empirical filter file:
   empirical_amps.txt 
 !DynamicFlag (0=no; use 1 for dynamic corner freq), PulsingPercent (typical 50.)

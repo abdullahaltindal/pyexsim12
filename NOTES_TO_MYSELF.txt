@@ -3,3 +3,5 @@
 * Prepare a proper example file showing all functionalities, add another file to test stuff.
 
 * I can still move all inputs to another folder. This way it is very distracting.
+
+* Prepare a tree showing all attributes and methods.
