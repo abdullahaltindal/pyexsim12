@@ -1,0 +1,7 @@
+! Site amplification file for pyexsim12 tutorial 
+5	!nfrequencies
+0.1953 	 5.1150
+0.9766 	 7.1550
+5.8590 	 0.7477
+8.8870 	 0.5308
+11.7200 	 0.2812
