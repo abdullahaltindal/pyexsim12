@@ -1,4 +1,5 @@
-* Prepare a proper example file showing all functionalities, add another file to test stuff.
-	* Prepare and plot amplifications.
+* Add velocity, displacement, gmim functions.
 
-* FILTER???
+* Prepare a proper example file showing all functionalities, add another file to test stuff.
+
+* I can still move all inputs to another folder. This way it is very distracting.

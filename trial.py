@@ -25,25 +25,25 @@ sites = Sites([(40.85, 31.17)])
 sim = Simulation(source, path, amplification, misc, sites)
 
 sim.create_input_file(save=True)
-sim.run(override=True)
+sim.run()
 duzce_recorded = pd.read_csv("duzce_recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)
 recorded_ew = np.array(duzce_recorded["EW"])
 recorded_ns = np.array(duzce_recorded["NS"])
 sim.rec_motions = (1, "EW", recorded_ew, 0.005)
 sim.rec_motions = (1, "NS", recorded_ns, 0.005)
+#%%
+fig, axs = plt.subplots()
+sim.plot_rp(1, axis=axs, plot_dict={"label": "Sim"})
+sim.plot_rec_rp(1, "EW", axis=axs, plot_dict={"label": "EW"})
+sim.plot_rec_rp(1, "NS", axis=axs, plot_dict={"label": "NS"})
+axs.legend()
+axs.set_xlim(left=0, right=4)
+plt.tight_layout()
 
-
-sim.plot_rec_fas(1, "EW")
-plt.xlim(left=0.1, right=50)
-
-# slip = np.array([[0.4, 0.6, 1.2, 1.35, 1.05, 1.2, 0.8, 1.2, 1.8, 1.7, 1.3, 0.9, 0.6],
-#                  [0.4, 0.9, 1.3, 1.4, 2.0, 1.8, 1.1, 1.8, 2.7, 2.6, 1.9, 1.3, 0.75],
-#                  [0.28, 0.55, 0.9, 1.2, 1.5, 1.7, 1.2, 2.1, 2.6, 2.4, 1.8, 1.2, 0.75],
-#                  [0.1, 0.25, 0.6, 0.7, 1.05, 1.35, 1.5, 1.95, 2.1, 1.6, 1.05, 0.75, 0.6],
-#                  [0.1, 0.1, 0.3, 0.45, 0.5, 0.7, 1.0, 1.2, 1.2, 0.6, 0.3, 0.2, 0.1]
-#                  ])
-
-slip = np.array([[0.745, 0.801, 0.986],
-                 [0.097, 0.561, 0.406]])
-# np.savetxt("filename.txt", slip, fmt="%1.3f", delimiter="\t")
-sim.create_slip_file(slip, "filename.txt")
+#%%
+fig2, axs2 = plt.subplots()
+sim.plot_fas(1, axis=axs2, plot_dict={"label": "Sim"})
+sim.plot_rec_fas(1, "EW", axis=axs2, plot_dict={"label": "EW"})
+sim.plot_rec_fas(1, "NS", axis=axs2, plot_dict={"label": "NS"})
+axs2.legend()
+axs2.set_xlim(left=0.1, right=50)

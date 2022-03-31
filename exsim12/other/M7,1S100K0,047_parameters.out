@@ -49,8 +49,8 @@ window applied               = Saragoni-Hart
 Saragoni-Hart epsilon        =        0.2000
 Saragoni-Hart eta            =        0.2000
 -----------------------------------------------
-amplification as in file crustal_dzc.txt               
-amplification as in file site_amps_dzc.txt             
+amplification as in file crustal_amp_tutorial.txt      
+amplification as in file site_amp_tutorial.txt         
 amplification as in file empirical_amps.txt            
 -----------------------------------------------
 -----------------------------------------------

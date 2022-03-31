@@ -268,7 +268,7 @@ class Simulation:
         Returns the simulated acceleration history and time arrays for the given site. Units in cm/s/s
         Args:
             site (int): Site number
-            filt_dict: Dictionary containing filter properties. If False, no filtering operations will be applied.
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
             Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
                 "N": The order of the filter. Default is 4.
                 "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
@@ -283,10 +283,12 @@ class Simulation:
             acc: Acceleration array in cm/s/s
         """
         # Unpack filter properties
-        filt_dict.get("N", 4)
-        filt_dict.get("Wn", [0.01, 0.5])
-        filt_dict.get("btype", "bandpass")
-        filt_dict.get("tukey", 0.05)
+        if filt_dict is None:
+            filt_dict = {}
+        N = filt_dict.get("N", 4)
+        Wn = filt_dict.get("Wn", [0.01, 0.5])
+        btype = filt_dict.get("btype", "bandpass")
+        tukey = filt_dict.get("tukey", 0.05)
 
         exsim_folder = self.misc.exsim_folder
         if not self.has_run():
@@ -301,13 +303,13 @@ class Simulation:
             if filt_dict is False:
                 return time, acc
             else:
-                b, a = signal.butter(N=filt_dict["N"], Wn=filt_dict["Wn"], btype=filt_dict["btype"])
+                b, a = signal.butter(N=N, Wn=Wn, btype=btype)
                 filt_acc = signal.filtfilt(b, a, acc)
-                tukey = signal.tukey(len(filt_acc), filt_dict["tukey"])
+                tukey = signal.tukey(len(filt_acc), tukey)
                 filt_acc = tukey * filt_acc
                 return time, filt_acc
 
-    def plot_acc(self, site, axis=None, plot_dict=None):
+    def plot_acc(self, site, axis=None, plot_dict=None, filt_dict=None):
         """
         Plot the simulated acceleration history at a site. After running the plot_acc method, the user can modify the
         created plot or axis with all the functionalities of the matplotlib.pyplot module.
@@ -323,6 +325,15 @@ class Simulation:
                         "label": Label for the legend. Default is None.
                         "alpha": Transparency. Default is 1.0
                         "linewidth": Line width. Default is 1.5.
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
+            Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
+                "N": The order of the filter. Default is 4.
+                "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+                       bandpass and bandstop filters, Wn is a length-2 sequence.
+                "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
+                                Default is 'bandpass'.
+                "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
+                tapered region.
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
@@ -338,7 +349,7 @@ class Simulation:
         alpha = plot_dict.get("alpha", 1.0)
         linewidth = plot_dict.get("linewidth", 1.5)
 
-        time, acc = self.get_acc(site)
+        time, acc = self.get_acc(site, filt_dict=filt_dict)
         if axis is None:
             fig = plt.figure()
             plt.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -390,13 +401,22 @@ class Simulation:
         else:
             axis.plot(time, acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
 
-    def get_rp(self, site, periods=None):
+    def get_rp(self, site, periods=None, filt_dict=None):
         """
         Calculates the response spectrum for the Simulation object at the given site.
         Returns the periods and spectral acceleration values.
         Args:
             site (int):  Site number.
             periods: (optional) Periods for spectral acceleration calculation.
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
+            Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
+                "N": The order of the filter. Default is 4.
+                "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+                       bandpass and bandstop filters, Wn is a length-2 sequence.
+                "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
+                                Default is 'bandpass'.
+                "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
+                tapered region.
 
         Returns:
             periods: Vibration periods for spectral acceleration calculation.
@@ -406,7 +426,7 @@ class Simulation:
         if periods is None:
             periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
                                       np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
-        _, acc_g = self.get_acc(site)
+        _, acc_g = self.get_acc(site, filt_dict=filt_dict)
         ksi = self.misc.damping / 100
         spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
@@ -580,7 +600,7 @@ class Simulation:
         else:
             axis.plot(periods, spec_acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
 
-    def get_fas(self, site, smooth=True, roll=9):
+    def get_fas(self, site, smooth=True, roll=9, filt_dict=None):
         """
         Get the Fourier amplitude spectrum of the simulated motion by fast Fourier transformation algorithm at a given
         site.
@@ -589,12 +609,21 @@ class Simulation:
             site (int):  Site number.
             smooth: If True, spectrum is smoothed with moving-average method. Default is True.
             roll: Window size for moving-average smoothing. Default is 9.
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
+            Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
+                "N": The order of the filter. Default is 4.
+                "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+                       bandpass and bandstop filters, Wn is a length-2 sequence.
+                "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
+                                Default is 'bandpass'.
+                "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
+                tapered region.
         Returns:
             freq: Frequency values in Hz.
             fas: Fourier amplitudes in cm/s.
         """
         dt = self.path.time_pads.delta_t
-        _, acc_g = self.get_acc(site)
+        _, acc_g = self.get_acc(site, filt_dict=filt_dict)
         length = len(acc_g)
         fas = np.fft.fft(acc_g)
         freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
@@ -1168,48 +1197,6 @@ class Simulation:
             axis.plot(periods, epsilon, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
 
-    def create_amp(self, freq, amp, filename, header=None):
-        """
-        Create the amplification file for site or crustal amplification.
-        Args:
-            freq: Frequency values in Hz.
-            amp: Amplification values.
-            filename: Filename for the amplification file.
-            header (str): Header for the amplification file which will be printed at the start of the file.
-
-        Returns:
-            None.
-        """
-        if header is None:
-            header = "Site, crustal or empirical filter file for EXSIM12"
-
-        if len(freq) != len(amp):
-            raise ValueError("freq and amp must have the same length.")
-
-        nfreq = len(freq)
-        exsim_folder = self.misc.exsim_folder
-        with open(f"./{exsim_folder}/{filename}", "w") as f:
-            f.write(f"! {header} \n")
-            f.write(f"{nfreq}\t!nfrequencies\n")
-            for freq_, amp_ in zip(freq, amp):
-                f.write(f"{freq_:.4f} \t {amp_:.4f}\n")
-
-    def create_slip_file(self, slip_matrix, filename):
-        """
-        Creates the input file for slip weights.
-        Args:
-            slip_matrix (np.ndarray): A multidimensional array containing slip values. It is important that the
-                                      dimensions of slip_matrix match the number of subfaults along the length and
-                                      width.
-            filename (str): Filename for the input slip weights file.
-
-        Returns:
-            filename (str): Filename for the input slip weights file.
-        """
-        exsim_folder = self.misc.exsim_folder
-        np.savetxt(f"./{exsim_folder}/{filename}", slip_matrix, fmt="%1.3f", delimiter="\t")
-        return filename
-
 
 @jit()
 def newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
@@ -1276,3 +1263,47 @@ def spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
     _, _, acc = newmark(acc_g, dt, period, ksi=ksi, beta=beta, gamma=gamma)
     sa = max(np.abs(acc))
     return sa
+
+
+def create_amp(freq, amp, filename, header=None, exsim_folder="exsim12"):
+    """
+    Create the amplification file for site or crustal amplification.
+    Args:
+        freq: Frequency values in Hz.
+        amp: Amplification values.
+        filename: Filename for the amplification file.
+        header (str): Header for the amplification file which will be printed at the start of the file.
+        exsim_folder: Folder name where EXSIM12.exe and other relevant files are located.
+    Returns:
+        filename: Filename for the amplification file.
+    """
+    if header is None:
+        header = "Site, crustal or empirical filter file for EXSIM12"
+
+    if len(freq) != len(amp):
+        raise ValueError("freq and amp must have the same length.")
+
+    nfreq = len(freq)
+    with open(f"./{exsim_folder}/{filename}", "w") as f:
+        f.write(f"! {header} \n")
+        f.write(f"{nfreq}\t!nfrequencies\n")
+        for freq_, amp_ in zip(freq, amp):
+            f.write(f"{freq_:.4f} \t {amp_:.4f}\n")
+    return filename
+
+
+def create_slip_file(slip_matrix, filename, exsim_folder="exsim12"):
+    """
+    Creates the input file for slip weights.
+    Args:
+        slip_matrix (np.ndarray): A multidimensional array containing slip values. It is important that the
+                                    dimensions of slip_matrix match the number of subfaults along the length and
+                                    width.
+        filename (str): Filename for the input slip weights file.
+        exsim_folder: Folder name where EXSIM12.exe and other relevant files are located.
+    Returns:
+        filename (str): Filename for the input slip weights file.
+
+    """
+    np.savetxt(f"./{exsim_folder}/{filename}", slip_matrix, fmt="%1.3f", delimiter="\t")
+    return filename
