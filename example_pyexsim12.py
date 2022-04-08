@@ -25,9 +25,6 @@ simulation.create_slip_file(slip_matrix=slip_matrix, filename="slip_weights.txt"
 rupture = Rupture(vrup_beta=0.8, slip_weights="slip_weights.txt")
 src = Source(src_spec, fault_geom, hypo, rupture)
 
-# Plot the slip distribution:
-src.plot_slip()
-
 # Print the recently created src object to see basic information:
 print(src)
 
@@ -40,11 +37,7 @@ q_factor = QualityFactor(0.0, 88, 0.9)
 path_dur = PathDuration()  # No input is provided as the default values will be used
 path = Path(time_pads, crust, geom_spread, q_factor, path_dur)
 
-# Plot quality factor function
-q_factor.plot(plot_dict={"color": "black"})
 
-# Plot geometrical spreading function
-geom_spread.plot(plot_dict={"color": "black"})
 
 # %% Creating amplification files and Amplification object
 simulation.create_amp(freq=[0.1953, 0.9766, 5.859, 8.887, 11.72],
@@ -59,6 +52,27 @@ simulation.create_amp(freq=[0.01, 0.1, 0.2, 0.3, 0.5, 0.9, 1.25, 1.8, 3.0, 5.3, 
 
 amp = Amplification(site_amp="site_amp_tutorial.txt", crustal_amp="crustal_amp_tutorial.txt")
 
+# %% Create Misc and Sites objects
+
+misc = Misc()  # Everything will be kept as default
+sites = Sites([(40.85, 31.17)])  # Only one site will be used for demonstration
+
+# %% Now the Simulation object is ready for initialization.
+sim = Simulation(src, path, amp, misc, sites)
+sim.create_input_file(save=True)  # Create the input file for EXSIM12
+sim.run(override=True)  # Run the simulation, if output files for this configuration exist, they will be overwritten
+
+# Recorded acceleration series for this simulation exist in the current working directory. They will be passed as
+# attributes for the sim object:
+recorded = pd.read_csv("recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)["EW"]
+recorded = np.array(recorded)  # Recorded motion should be a numpy.ndarray object for performance
+
+sim.rec_motions = (1, "EW", recorded, 0.005)  # (site_no, direction, acceleration_record, time_step)
+
+#%%
+# Plot the slip distribution:
+sim.plot_slip()
+
 # Plot site and crustal amplifications:
 fig_amp, axs_amp = plt.subplots()
 amp.plot_site_amp(axis=axs_amp, plot_dict={"label": "Site Amplification", "color": "blue"})
@@ -67,19 +81,58 @@ axs_amp.legend()
 axs_amp.set_xlabel("Frequency (Hz)")
 axs_amp.set_ylabel("Amplification")
 
-# %% Create Misc and Sites objects
+# Plot quality factor function
+q_factor.plot(plot_dict={"color": "black"})
 
-misc = Misc()  # Everything will be kept as default
-sites = Sites([(40.85, 31.17)])  # Only one site will be used for demonstartion
+# Plot geometrical spreading function
+geom_spread.plot(plot_dict={"color": "black"})
 
-# %% Now the Simulation object is ready for initialization.
-sim = Simulation(src, path, amp, misc, sites)
-sim.create_input_file(save=True)  # Create the input file for EXSIM12
-sim.run(override=True)  # Run the simulation, if output files for this configuration exist, they will be overwritten
-# Recorded acceleration series for this simulation exist in the current working directory. They will be passed as
-# attributes for the sim object:
+#%% Visualize simulated motion
+sim.plot_acc(site=1)
 
-recorded = pd.read_csv("recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)["EW"]
-recorded = np.array(recorded)  # Recorded motion should be a numpy.ndarray object for performance
+#%% Visualize Fourier amplitude spectra
+fig_fas, axs_fas = plt.subplots()
+sim.plot_fas(site=1, axis=axs_fas, plot_dict={"color": "black", "label": "Simulated"})
 
-sim.rec_motions = (1, "EW", recorded, 0.005)  # (site_no, direction, acceleration_record, time_step)
+sim.plot_rec_fas(site=1, direction="EW", axis=axs_fas, plot_dict={"color": "blue", "label": "Recorded"})
+axs_fas.legend()
+axs_fas.set_xlabel("Frequency (Hz)")
+axs_fas.set_ylabel("Fourier Amplitude (cm/s)")
+axs_fas.set_ylim(bottom=1e-4, top=1e3)
+axs_fas.set_xlim(left=1, right=50)
+
+#%% Plot misfit in FAS
+sim.plot_misfit_fas(1, "EW")
+plt.xlim(left=1, right=50)
+plt.ylim(top=4)
+
+#%% Plot Response spectrum
+fig_rp, axs_rp = plt.subplots()
+sim.plot_rp(site=1, axis=axs_rp, plot_dict={"color": "black", "label": "Simulated"})
+sim.plot_rec_rp(site=1, direction="EW", axis=axs_rp, plot_dict={"color": "blue", "label": "Recorded"})
+axs_rp.legend()
+axs_rp.set_xlabel("Period (s)")
+axs_rp.set_ylabel("Spectral Acceleration ($cm/s^2$)")
+axs_rp.set_xscale("log")
+axs_rp.set_yscale("log")
+axs_rp.set_xlim(right=4)
+
+#%% Plot rp misfit
+sim.plot_misfit_rp(site=1, direction="EW")
+plt.xlim(left=0, right=4)
+
+#%% Plot GMM
+fig_gmm, axs_gmm = plt.subplots()
+sim.plot_rp(site=1, axis=axs_gmm, plot_dict={"color": "black", "label": "Simulated"})
+sim.plot_bssa14(site=1, vs30=300, axis=axs_gmm, plot_dict={"color": "blue", "label": "BSSA14"})
+
+axs_gmm.legend()
+axs_gmm.set_xlabel("Period (s)")
+axs_gmm.set_ylabel("Spectral Acceleration ($cm/s^2$)")
+axs_gmm.set_xscale("log")
+axs_gmm.set_yscale("log")
+axs_gmm.set_xlim(left=0.1)
+
+#%% Plot GMM epsilons
+sim.plot_bssa14_eps(site=1, vs30=300, plot_dict={"color": "black"})
+plt.xlim(left=0, right=4)

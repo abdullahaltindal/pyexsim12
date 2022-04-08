@@ -708,7 +708,7 @@ class Simulation:
         if axis is None:
             fig = plt.figure()
             plt.plot(freq, misfit, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Period (s)")
+            plt.xlabel("Frequency (Hz)")
             plt.ylabel("$ln(observed) / ln(simulated)$")
             plt.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
             plt.xlim(left=0, right=50)
@@ -1217,8 +1217,11 @@ class Simulation:
                 exsim_folder = self.misc.exsim_folder
                 out_params = f"{exsim_folder}/other/{self.misc.stem}_parameters.out"
                 slip_matrix = np.genfromtxt(out_params, skip_header=64)
-        if not is_random:
+        elif not is_random:
             slip_matrix = np.genfromtxt(f"{exsim_folder}/{self.source.rupture.slip_weights}")
+        else:
+            raise FileNotFoundError("Cannot find slip file.")
+
         if figsize is None:
             length, width, d_length, d_width, _ = self.source.fault_geom.len_width
             subf_no_l = length / d_length  # Number of subfaults along the length
@@ -1226,9 +1229,10 @@ class Simulation:
             figsize = (subf_no_l, subf_no_w)
         fig = plt.figure(figsize=figsize)
         plt.imshow(slip_matrix, cmap="jet")
-        plt.colorbar(fraction=0.046, pad=0.03)
-        plt.xlabel("Subfault No. (Down dip)", fontsize=14)
-        plt.ylabel("Subfault No. (Along length)", fontsize=14)
+        cbar = plt.colorbar(fraction=0.046, pad=0.03)
+        cbar.set_label("Slip", fontsize=16)
+        plt.ylabel("Subfault No. (Down dip)", fontsize=14)
+        plt.xlabel("Subfault No. (Along length)", fontsize=14)
         return fig
 
     def get_vel(self, site, filt_dict=None):
