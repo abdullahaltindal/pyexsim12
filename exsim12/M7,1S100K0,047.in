@@ -44,10 +44,11 @@
 ! r_ref, nseg (hinged line segments), (rlow(i), slope)
 ! (Usually set r_ref = 1.0 km)
     1.0 
-    3 
-      1.0 -1.0
-      1.0 -1.0 
-     30.0 -0.6 
+    4 
+  1.0 -1.0 
+  30.0 -0.6 
+  50.0 -0.5 
+  60 -0.4 
 !Quality factor: Qmin, Q0, and eta, Q=max(Qmin, Q0*F**eta)
    0.0 88 0.9 
 !path duration: example has duration increasing as 0.05R

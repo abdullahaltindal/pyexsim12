@@ -181,8 +181,11 @@ class Simulation:
             for _ in range(inc):
                 temp.insert(49, "")
 
-            temp[47 + inc] = self.aline(list(geometric_spreading.spread[0]), pad=6)
-            temp[48 + inc] = self.aline(list(geometric_spreading.spread[1]), pad=5)
+            for seg, spread in enumerate(geometric_spreading.spread):
+                temp[47+seg] = self.aline(spread)
+
+            # temp[47 + inc] = self.aline(list(geometric_spreading.spread[0]), pad=6)
+            # temp[48 + inc] = self.aline(list(geometric_spreading.spread[1]), pad=5)
 
             temp[50 + inc] = self.aline(list(quality_factor), pad=3)
 
