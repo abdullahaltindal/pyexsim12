@@ -289,10 +289,11 @@ class Simulation:
         # Unpack filter properties
         if filt_dict is None:
             filt_dict = {}
-        N = filt_dict.get("N", 4)
-        Wn = filt_dict.get("Wn", [0.01, 0.5])
-        btype = filt_dict.get("btype", "bandpass")
-        tukey = filt_dict.get("tukey", 0.05)
+        if filt_dict is not False:
+            N = filt_dict.get("N", 4)
+            Wn = filt_dict.get("Wn", [0.01, 0.5])
+            btype = filt_dict.get("btype", "bandpass")
+            tukey = filt_dict.get("tukey", 0.05)
 
         exsim_folder = self.misc.exsim_folder
         if not self.has_run():

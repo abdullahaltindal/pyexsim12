@@ -24,13 +24,39 @@ sites = Sites([(40.85, 31.17)])
 
 sim = Simulation(source, path, amplification, misc, sites)
 
+# Source 2
+source_spec2 = SourceSpec(7.1, 100, 0.04)
+source_spec3 = SourceSpec(7.1, 100, 0.03)
+source2 = Source(source_spec2, fault_geom, hypo, rupture)
+source3 = Source(source_spec3, fault_geom, hypo, rupture)
+sim2 = Simulation(source2, path, amplification, Misc(), sites)
+sim3 = Simulation(source3, path, amplification, Misc(), sites)
+
 sim.create_input_file(save=True)
-sim.run(override=True)
-duzce_recorded = pd.read_csv("duzce_recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)
-recorded_ew = np.array(duzce_recorded["EW"])
-recorded_ns = np.array(duzce_recorded["NS"])
-sim.rec_motions = (1, "EW", recorded_ew, 0.005)
-sim.rec_motions = (1, "NS", recorded_ns, 0.005)
+sim2.create_input_file(save=True)
+sim3.create_input_file(save=True)
 
-sim.plot_acc(1)
 
+sim.run()
+sim2.run()
+sim3.run()
+#%%
+fig, axs = plt.subplots()
+sim.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.047$"))
+sim2.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.04$"))
+sim3.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.03$"))
+axs.legend()
+axs.set_xscale("log")
+axs.set_yscale("log")
+axs.set_xlim(right=4)
+
+
+# sim.create_input_file(save=True)
+# sim.run(override=True)
+# duzce_recorded = pd.read_csv("duzce_recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)
+# recorded_ew = np.array(duzce_recorded["EW"])
+# recorded_ns = np.array(duzce_recorded["NS"])
+# sim.rec_motions = (1, "EW", recorded_ew, 0.005)
+# sim.rec_motions = (1, "NS", recorded_ns, 0.005)
+#
+# sim.plot_acc(1)

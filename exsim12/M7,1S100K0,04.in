@@ -1,10 +1,10 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,047.in. Created on 2022-04-12. 
+  M7.1, filename:M7,1S100K0,04.in. Created on 2022-04-12. 
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
-  7.1 100 1 0.03 
+  7.1 100 1 0.04 
 !lat and lon of upper edge of fault
   40.77 31.45 
 !strike,dip, depth of fault
@@ -70,7 +70,7 @@
 !frequency (-1.0, 99.0 for pgv, pga):
  -1.0 99.0 0.5 5.0 
 !Output file names stem:
-  M7,1S100K0,047 
+  M7,1S100K0,04 
 !Name of crustal amplification file:
   crustal_dzc.txt 
 !Name of site amplification file:
