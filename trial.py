@@ -25,10 +25,12 @@ sites = Sites([(40.85, 31.17)])
 sim = Simulation(source, path, amplification, misc, sites)
 
 sim.create_input_file(save=True)
-sim.run()
+sim.run(override=True)
 duzce_recorded = pd.read_csv("duzce_recorded.txt", names=["EW", "NS", "V"], delim_whitespace=True)
 recorded_ew = np.array(duzce_recorded["EW"])
 recorded_ns = np.array(duzce_recorded["NS"])
 sim.rec_motions = (1, "EW", recorded_ew, 0.005)
 sim.rec_motions = (1, "NS", recorded_ns, 0.005)
+
+sim.plot_acc(1)
 

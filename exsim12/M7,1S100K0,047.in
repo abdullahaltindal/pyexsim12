@@ -1,6 +1,6 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,047.in. Created on 2022-04-08. 
+  M7.1, filename:M7,1S100K0,047.in. Created on 2022-04-12. 
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
@@ -44,11 +44,10 @@
 ! r_ref, nseg (hinged line segments), (rlow(i), slope)
 ! (Usually set r_ref = 1.0 km)
     1.0 
-    4 
+    3 
   1.0 -1.0 
   30.0 -0.6 
   50.0 -0.5 
-  60 -0.4 
 !Quality factor: Qmin, Q0, and eta, Q=max(Qmin, Q0*F**eta)
    0.0 88 0.9 
 !path duration: example has duration increasing as 0.05R
@@ -73,9 +72,9 @@
 !Output file names stem:
   M7,1S100K0,047 
 !Name of crustal amplification file:
-  crustal_amp_tutorial.txt 
+  crustal_dzc.txt 
 !Name of site amplification file:
-  site_amp_tutorial.txt 
+  site_amps_dzc.txt 
 !Name of empirical filter file:
   empirical_amps.txt 
 !DynamicFlag (0=no; use 1 for dynamic corner freq), PulsingPercent (typical 50.)
