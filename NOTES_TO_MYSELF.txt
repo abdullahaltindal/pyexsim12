@@ -6,8 +6,4 @@
 
 * Prepare a tree showing all attributes and methods.
 
-* Add underscore to internal methods.
-
 * When GMM plots (plot_bssa14, plot_kaah15) gets no color input, plus/minus std curves have different colors. Let's get a single color at the beginning of the function and go with that.
-
-* __copy__ methods for main classes.

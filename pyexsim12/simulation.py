@@ -35,10 +35,10 @@ class Simulation:
         self.sites = sites
 
         if self.misc.stem is None:
-            self.misc.stem = self.create_stem()
+            self.misc.stem = self._create_stem()
 
         if self.misc.inputs_filename is None:
-            self.misc.inputs_filename = self.create_stem() + ".in"
+            self.misc.inputs_filename = self._create_stem() + ".in"
 
         self._rec_motions = {}  # Initialize recorded motions attribute
 
@@ -88,7 +88,7 @@ class Simulation:
         dct[site_no, direction] = acceleration_record, time_step
         self._rec_motions = dct
 
-    def create_stem(self):
+    def _create_stem(self):
         """
         Create filename stem with Mw, stress drop and kappa values.
         Returns:
@@ -101,7 +101,7 @@ class Simulation:
 
         return stem.replace(".", ",")
 
-    def make_title(self):
+    def _make_title(self):
         """
         Crete title for the EXSIM inputs.
         Returns: Title.
@@ -113,7 +113,7 @@ class Simulation:
         return title
 
     @staticmethod
-    def aline(lst, pad=2):
+    def _aline(lst, pad=2):
         """
         Aline the elements in a list properly to be later passed into EXSIM12 as inputs
         """
@@ -151,77 +151,74 @@ class Simulation:
         with open("./exsim12/input_temp.txt") as f:
             temp = [line.rstrip() for line in f]
 
-            title = self.make_title()
-            temp[2] = self.aline(title)
+            title = self._make_title()
+            temp[2] = self._aline(title)
 
             if self.misc.write_misc:
-                temp[4] = self.aline("Y", pad=1)
+                temp[4] = self._aline("Y", pad=1)
             else:
-                temp[4] = self.aline("N", pad=1)
+                temp[4] = self._aline("N", pad=1)
 
-            temp[6] = self.aline(list(source_spec))
-            temp[8] = self.aline(list(fault_geom.fault_edge))
+            temp[6] = self._aline(list(source_spec))
+            temp[8] = self._aline(list(fault_geom.fault_edge))
 
-            temp[10] = self.aline(fault_geom.angles)
-            temp[13] = self.aline(fault_geom.fault_type)
+            temp[10] = self._aline(fault_geom.angles)
+            temp[13] = self._aline(fault_geom.fault_type)
 
-            temp[28] = self.aline(fault_geom.len_width)
-            temp[30] = self.aline(rupture.vrup_beta)
+            temp[28] = self._aline(fault_geom.len_width)
+            temp[30] = self._aline(rupture.vrup_beta)
 
-            temp[35] = self.aline(list(hypo))
+            temp[35] = self._aline(list(hypo))
 
-            temp[37] = self.aline(rupture.risetime, pad=1)
-            temp[39] = self.aline(list(time_pads), pad=1)
+            temp[37] = self._aline(rupture.risetime, pad=1)
+            temp[39] = self._aline(list(time_pads), pad=1)
 
-            temp[41] = self.aline(list(crust))
-            temp[45] = self.aline(geometric_spreading.r_ref, pad=4)
-            temp[46] = self.aline(geometric_spreading.n_seg, pad=4)
+            temp[41] = self._aline(list(crust))
+            temp[45] = self._aline(geometric_spreading.r_ref, pad=4)
+            temp[46] = self._aline(geometric_spreading.n_seg, pad=4)
 
             inc = geometric_spreading.n_seg - 2  # Increase each line number by inc
             for _ in range(inc):
                 temp.insert(49, "")
 
             for seg, spread in enumerate(geometric_spreading.spread):
-                temp[47+seg] = self.aline(spread)
+                temp[47 + seg] = self._aline(spread)
 
-            # temp[47 + inc] = self.aline(list(geometric_spreading.spread[0]), pad=6)
-            # temp[48 + inc] = self.aline(list(geometric_spreading.spread[1]), pad=5)
+            temp[50 + inc] = self._aline(list(quality_factor), pad=3)
 
-            temp[50 + inc] = self.aline(list(quality_factor), pad=3)
+            temp[53 + inc] = self._aline(path_duration.n_dur, pad=4)
+            temp[54 + inc] = self._aline(list(path_duration.r_dur[0]), pad=4)
+            temp[55 + inc] = self._aline(list(path_duration.r_dur[1]), pad=3)
+            temp[56 + inc] = self._aline(path_duration.dur_slope, pad=2)
 
-            temp[53 + inc] = self.aline(path_duration.n_dur, pad=4)
-            temp[54 + inc] = self.aline(list(path_duration.r_dur[0]), pad=4)
-            temp[55 + inc] = self.aline(list(path_duration.r_dur[1]), pad=3)
-            temp[56 + inc] = self.aline(path_duration.dur_slope, pad=2)
+            temp[59 + inc] = self._aline(self.misc.window)
+            temp[61 + inc] = self._aline(self.misc.low_cut, pad=1)
+            temp[63 + inc] = self._aline(self.misc.damping, pad=1)
+            temp[65 + inc] = self._aline(self.misc.f_rp)
+            temp[67 + inc] = self._aline(self.misc.no_freqs, pad=1)
+            temp[69 + inc] = self._aline(self.misc.freqs, pad=1)
 
-            temp[59 + inc] = self.aline(self.misc.window)
-            temp[61 + inc] = self.aline(self.misc.low_cut, pad=1)
-            temp[63 + inc] = self.aline(self.misc.damping, pad=1)
-            temp[65 + inc] = self.aline(self.misc.f_rp)
-            temp[67 + inc] = self.aline(self.misc.no_freqs, pad=1)
-            temp[69 + inc] = self.aline(self.misc.freqs, pad=1)
+            temp[71 + inc] = self._aline(self.misc.stem)
+            temp[73 + inc] = self._aline(self.amplification.crustal_amp, pad=2)
+            temp[75 + inc] = self._aline(self.amplification.site_amp, pad=2)
+            temp[77 + inc] = self._aline(self.amplification.empirical_amp, pad=2)
 
-            temp[71 + inc] = self.aline(self.misc.stem)
-            temp[73 + inc] = self.aline(self.amplification.crustal_amp, pad=2)
-            temp[75 + inc] = self.aline(self.amplification.site_amp, pad=2)
-            temp[77 + inc] = self.aline(self.amplification.empirical_amp, pad=2)
+            temp[79 + inc] = self._aline(self.misc.flags[:2])
+            temp[81 + inc] = self._aline(self.misc.flags[2])
+            temp[83 + inc] = self._aline(self.misc.flags[3])
+            temp[85 + inc] = self._aline(self.misc.flags[4])
 
-            temp[79 + inc] = self.aline(self.misc.flags[:2])
-            temp[81 + inc] = self.aline(self.misc.flags[2])
-            temp[83 + inc] = self.aline(self.misc.flags[3])
-            temp[85 + inc] = self.aline(self.misc.flags[4])
+            temp[87 + inc] = self._aline(self.misc.det_flags)
+            temp[89 + inc] = self._aline([self.misc.i_seed, self.misc.no_of_trials])
 
-            temp[87 + inc] = self.aline(self.misc.det_flags)
-            temp[89 + inc] = self.aline([self.misc.i_seed, self.misc.no_of_trials])
+            temp[93 + inc] = self._aline(self.source.rupture.i_slip_weight, pad=3)
+            temp[96 + inc] = self._aline(self.source.rupture.slip_weights, pad=2)
+            temp[98 + inc] = self._aline([self.sites.no_of_sites, self.sites.site_coord_flag])
 
-            temp[93 + inc] = self.aline(self.source.rupture.i_slip_weight, pad=3)
-            temp[96 + inc] = self.aline(self.source.rupture.slip_weights, pad=2)
-            temp[98 + inc] = self.aline([self.sites.no_of_sites, self.sites.site_coord_flag])
-
-            temp[110 + inc] = self.aline(self.misc.strike_zero_flag, pad=1)
+            temp[110 + inc] = self._aline(self.misc.strike_zero_flag, pad=1)
 
             for i, site in enumerate(self.sites.coords):
-                temp[112 + inc + i] = self.aline(site)
+                temp[112 + inc + i] = self._aline(site)
 
         if save:
             with open(f"./{exsim_folder}/{inputs_filename}", "w") as output:
@@ -362,7 +359,7 @@ class Simulation:
             plt.ylabel("Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(time, acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
 
     def plot_rec_acc(self, site, direction, axis=None, plot_dict=None):
         """
@@ -404,7 +401,7 @@ class Simulation:
             plt.ylabel("Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(time, acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
 
     def get_rp(self, site, periods=None, filt_dict=None):
         """
@@ -433,7 +430,7 @@ class Simulation:
                                       np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
         _, acc_g = self.get_acc(site, filt_dict=filt_dict)
         ksi = self.misc.damping / 100
-        spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
+        spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
 
     def get_rec_rp(self, site, direction, periods=None):
@@ -454,7 +451,7 @@ class Simulation:
             periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
                                       np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
         ksi = self.misc.damping / 100
-        spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
+        spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
 
     def misfit_rp(self, site, direction, periods=None):
@@ -516,7 +513,7 @@ class Simulation:
             plt.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
             return fig
         else:
-            axis.plot(periods, misfit, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(periods, misfit, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
 
     def plot_rp(self, site, periods=None, axis=None, plot_dict=None):
@@ -559,7 +556,8 @@ class Simulation:
             plt.ylabel("Spectral Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(periods, spec_acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha,
+                      linewidth=linewidth)
 
     def plot_rec_rp(self, site, direction, periods=None, axis=None, plot_dict=None):
         """
@@ -603,7 +601,8 @@ class Simulation:
             plt.ylabel("Spectral Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(periods, spec_acc, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha,
+                      linewidth=linewidth)
 
     def get_fas(self, site, smooth=True, roll=9, filt_dict=None):
         """
@@ -718,7 +717,7 @@ class Simulation:
             plt.xlim(left=0, right=50)
             return fig
         else:
-            axis.plot(freq, misfit, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(freq, misfit, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(freq), max(freq), color="black", linestyle="dashed")
             axis.set_xlim(left=0, right=50)
 
@@ -763,7 +762,7 @@ class Simulation:
             plt.yscale("log")
             return fig
         else:
-            axis.plot(freq, fas, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.set_xscale("log")
             axis.set_yscale("log")
 
@@ -808,7 +807,7 @@ class Simulation:
             plt.yscale("log")
             return fig
         else:
-            axis.plot(freq, fas, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.set_xscale("log")
             axis.set_yscale("log")
 
@@ -923,9 +922,10 @@ class Simulation:
         sa, p_sigma, m_sigma = gmm.bssa14.bssa14_vectorized(mw, rjb, vs30, mech, region, z1=z1, unit=unit)
         if axis is None:
             fig = plt.figure()
-            plt.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                     linewidth=linewidth)
+            line, = plt.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                             linewidth=linewidth)
             if pm_sigma:
+                color = line.get_color()
                 plt.plot(gmm.bssa14.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
                          linestyle=linestyle_pm, linewidth=linewidth_pm)
                 plt.plot(gmm.bssa14.periods, m_sigma, alpha=alpha, color=color,
@@ -934,9 +934,10 @@ class Simulation:
                 plt.ylabel("Spectral Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                      linewidth=linewidth)
+            line, = axis.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                              linewidth=linewidth)
             if pm_sigma:
+                color = line.get_color()
                 axis.plot(gmm.bssa14.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
                           linestyle=linestyle_pm, linewidth=linewidth_pm)
                 axis.plot(gmm.bssa14.periods, m_sigma, alpha=alpha, color=color,
@@ -1031,9 +1032,10 @@ class Simulation:
         sa, p_sigma, m_sigma = gmm.kaah15.kaah15_vectorized(mw, rjb, vs30, mech, unit=unit)
         if axis is None:
             fig = plt.figure()
-            plt.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                     linewidth=linewidth)
+            line,  = plt.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                            linewidth=linewidth)
             if pm_sigma:
+                color = line.get_color()
                 plt.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
                          linestyle=linestyle_pm, linewidth=linewidth_pm)
                 plt.plot(gmm.kaah15.periods, m_sigma, alpha=alpha, color=color,
@@ -1042,14 +1044,15 @@ class Simulation:
                 plt.ylabel("Spectral Acceleration ($cm/s^2$)")
             return fig
         else:
-            axis.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                      linewidth=linewidth)
+            line,  = axis.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                             linewidth=linewidth)
             if pm_sigma:
+                color = line.get_color()
                 axis.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
                           linestyle=linestyle_pm, linewidth=linewidth_pm)
                 axis.plot(gmm.kaah15.periods, m_sigma, alpha=alpha, color=color,
                           linestyle=linestyle_pm, linewidth=linewidth_pm)
-    
+
     def bssa14_eps(self, site, vs30, region=1, *, mech=None, z1=None):
         """
         Calculates epsilon (normalized residual) values for the BSSA14 GMM. Corresponding periods can be obtained from
@@ -1075,7 +1078,7 @@ class Simulation:
         periods = gmm.bssa14.periods
         ln_bssa14 = np.array([gmm.bssa14.bssa14_ln(mw, rjb, vs30, t, mech, region, z1) for t in periods])
         sgm = np.array([gmm.bssa14.bssa14_sigma(mw, rjb, vs30, t) for t in periods])
-        
+
         _, sa_sim = self.get_rp(site, periods=periods)
         sa_sim_g = sa_sim / 981
         ln_sa = np.log(sa_sim_g)
@@ -1139,7 +1142,7 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        
+
         epsilon = self.bssa14_eps(site, vs30, region, mech=mech, z1=z1)
         periods = gmm.bssa14.periods
         # Unpack plotting options and set default values for missing keys:
@@ -1157,7 +1160,7 @@ class Simulation:
             plt.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
             return fig
         else:
-            axis.plot(periods, epsilon, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
 
     def plot_kaah15_eps(self, site, vs30, *, axis=None, mech=None, plot_dict=None):
@@ -1199,7 +1202,7 @@ class Simulation:
             plt.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
             return fig
         else:
-            axis.plot(periods, epsilon, color=color, linestyle="solid", label=label, alpha=alpha, linewidth=linewidth)
+            axis.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
             axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
 
     def plot_slip(self, exsim_folder="exsim12", figsize=None):
@@ -1265,7 +1268,7 @@ class Simulation:
 
 
 @jit()
-def newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
+def _newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
     """
     Solves the equation of motion for a SDOF system under ground excitation, with Newmark's Beta method.
 
@@ -1311,7 +1314,7 @@ def newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
 
 
 @jit()
-def spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
+def _spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
     """
     Calculates spectral acceleration corresponding to a given period, under ground excitation.
 
@@ -1326,7 +1329,7 @@ def spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
     Returns:
         sa: Spectral acceleration.
     """
-    _, _, acc = newmark(acc_g, dt, period, ksi=ksi, beta=beta, gamma=gamma)
+    _, _, acc = _newmark(acc_g, dt, period, ksi=ksi, beta=beta, gamma=gamma)
     sa = max(np.abs(acc))
     return sa
 
