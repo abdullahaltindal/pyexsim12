@@ -12,7 +12,7 @@ No.of subs along dip      =        5
 subfault length           =     5.00
 subfault width            =     5.00
 i_rise_time (1=orig,2=1/f0) =  1
-iseed, nsims =   1769033992    1
+iseed, nsims =   1665409751    3
 -----------------------------------------------
 input hypocenter at position    =   7.000E+00  3.000E+00
 input hypocenter at subfault    =    2   1

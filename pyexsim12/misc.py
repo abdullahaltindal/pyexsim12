@@ -3,7 +3,7 @@ class Misc:
     Miscellaneous parameters. Default values in EXSIM12 distribution will be kept for most parameters.
     """
 
-    def __init__(self, stem=None, i_seed=309, no_of_trials=1, window=None, low_cut=(0.05, 8), damping=5.0, f_rp=None,
+    def __init__(self, stem=None, i_seed=309, no_of_trials=3, window=None, low_cut=(0.05, 8), damping=5.0, f_rp=None,
                  freqs=None, flags=None, det_flags=None, write_misc=True, strike_zero_flag="N", inputs_filename=None,
                  exsim_folder="exsim12"):
         """

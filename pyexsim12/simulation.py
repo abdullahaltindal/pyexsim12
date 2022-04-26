@@ -293,12 +293,13 @@ class Simulation:
             tukey = filt_dict.get("tukey", 0.05)
 
         exsim_folder = self.misc.exsim_folder
+        no_of_trials = self.misc.no_of_trials
         if not self.has_run():
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
         else:
             stem = self.misc.stem
-            filename = f"{stem}S{str(site).zfill(3)}iter001.acc"
+            filename = f"{stem}S{str(site).zfill(3)}iter{str(no_of_trials).zfill(3)}.acc"
             acc_data = np.genfromtxt(f"./{exsim_folder}/ACC/{filename}", skip_header=16)
             time = acc_data[:, 0]
             acc = acc_data[:, 1]
@@ -1032,8 +1033,8 @@ class Simulation:
         sa, p_sigma, m_sigma = gmm.kaah15.kaah15_vectorized(mw, rjb, vs30, mech, unit=unit)
         if axis is None:
             fig = plt.figure()
-            line,  = plt.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                            linewidth=linewidth)
+            line, = plt.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                             linewidth=linewidth)
             if pm_sigma:
                 color = line.get_color()
                 plt.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
@@ -1044,8 +1045,8 @@ class Simulation:
                 plt.ylabel("Spectral Acceleration ($cm/s^2$)")
             return fig
         else:
-            line,  = axis.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                             linewidth=linewidth)
+            line, = axis.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                              linewidth=linewidth)
             if pm_sigma:
                 color = line.get_color()
                 axis.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,

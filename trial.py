@@ -37,21 +37,4 @@ sim2.create_input_file(save=True)
 sim3.create_input_file(save=True)
 
 
-sim.run()
-sim2.run()
-sim3.run()
-#%%
-fig, axs = plt.subplots()
-sim.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.047$", linestyle="dashed", alpha=0.8))
-sim2.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.04$", linestyle="dashed", alpha=0.8))
-sim3.plot_rp(site=1, axis=axs, plot_dict=dict(label="$\kappa=0.03$", linestyle="dashed", alpha=0.8))
-axs.legend()
-# axs.set_xscale("log")
-# axs.set_yscale("log")
-axs.set_xlim(right=4)
-
-#%%
-fig, axs = plt.subplots()
-sim.plot_rp(site=1, axis=axs)
-sim.plot_kaah15(site=1, axis=axs, vs30=300)
-axs.legend()
+sim.run(override=True)
