@@ -12,7 +12,7 @@ No.of subs along dip      =        5
 subfault length           =     5.00
 subfault width            =     5.00
 i_rise_time (1=orig,2=1/f0) =  1
-iseed, nsims =   1665409751    3
+iseed, nsims =   1724691302    3
 -----------------------------------------------
 input hypocenter at position    =   7.000E+00  3.000E+00
 input hypocenter at subfault    =    2   1
@@ -49,8 +49,8 @@ window applied               = Saragoni-Hart
 Saragoni-Hart epsilon        =        0.2000
 Saragoni-Hart eta            =        0.2000
 -----------------------------------------------
-amplification as in file crustal_dzc.txt               
-amplification as in file site_amps_dzc.txt             
+amplification as in file crustal_amp_tutorial.txt      
+amplification as in file site_amp_tutorial.txt         
 amplification as in file empirical_amps.txt            
 -----------------------------------------------
 -----------------------------------------------
@@ -59,7 +59,10 @@ amplification as in file empirical_amps.txt
 Analytical Flag is  OFF   =     0
  
 tpadl, tpadt, dt(sec)                     :    50.000    20.000     0.005
-For site   1 siteLocation coordinates 1&2 =     40.85    31.17
+For site   1 siteLocation coordinates 1&2 =      2.50    90.00
+For site   2 siteLocation coordinates 1&2 =      2.50   180.00
+For site   3 siteLocation coordinates 1&2 =      2.50   264.00
+For site   4 siteLocation coordinates 1&2 =      2.50     0.00
  
  The slip distribution is: 
    0.288     0.432     0.865     0.973     0.757     0.865     0.576     0.865     1.297     1.225     0.937     0.649     0.432

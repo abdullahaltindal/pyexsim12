@@ -218,7 +218,10 @@ class Simulation:
             temp[110 + inc] = self._aline(self.misc.strike_zero_flag, pad=1)
 
             for i, site in enumerate(self.sites.coords):
-                temp[112 + inc + i] = self._aline(site)
+                try:
+                    temp[112 + inc + i] = self._aline(site)
+                except IndexError:
+                    temp.append(self._aline(site))
 
         if save:
             with open(f"./{exsim_folder}/{inputs_filename}", "w") as output:

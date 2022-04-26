@@ -72,9 +72,9 @@
 !Output file names stem:
   M7,1S100K0,047 
 !Name of crustal amplification file:
-  crustal_dzc.txt 
+  crustal_amp_tutorial.txt 
 !Name of site amplification file:
-  site_amps_dzc.txt 
+  site_amp_tutorial.txt 
 !Name of empirical filter file:
   empirical_amps.txt 
 !DynamicFlag (0=no; use 1 for dynamic corner freq), PulsingPercent (typical 50.)
@@ -97,7 +97,7 @@
 ! even if do not assign the slip weights
   slip_weights.txt 
 !Number of Sites, site coord flag (1=lat,long; 2=R,Az; 3=N,E)
-  1 1 
+  4 2 
 !If "Y" below and strike = 0.0:
 !  if site coord flag = 2, move origin of the radial line to the midpoint of
 !                         the top edge of the fault
@@ -111,4 +111,7 @@
 !                         strike of the fault
  N 
 !Coordinates of each site
-  40.85 31.17 
+  2.5 90 
+  2.5 180 
+  2.5 264 
+  2.5 0 
