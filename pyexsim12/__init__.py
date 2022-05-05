@@ -15,5 +15,6 @@ from pyexsim12.path import Path, TimePads, Crust, GeometricSpreading, QualityFac
 from pyexsim12.misc import Misc
 from pyexsim12.amplification import Amplification
 from pyexsim12.sites import Sites
+from pyexsim12.gmim import *
 
 plt.interactive(True)
