@@ -1,6 +1,6 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,04.in. Created on 2022-04-26. 
+  M7.1, filename:M7,1S100K0,04.in. Created on 2022-04-26.
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
@@ -88,7 +88,7 @@
 !deterministic flag,gama,nu,t0, impulse peak (see Motazedian and Atkinson, 2005)
   0 2.0 1.571 4.0 100.0 
 !iseed, # of trials
-  309 3 
+  309 1 
 !islipweight = -1  -> unity slip for all subfaults,
 !islipweight =  0  -> specify slips read from text file,
 !islipweight =  1  -> random weights

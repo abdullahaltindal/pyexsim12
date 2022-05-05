@@ -1,6 +1,6 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,047.in. Created on 2022-04-26. 
+  M7.1, filename:M7,1S100K0,047.in. Created on 2022-05-06. 
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
@@ -72,9 +72,9 @@
 !Output file names stem:
   M7,1S100K0,047 
 !Name of crustal amplification file:
-  crustal_amp_tutorial.txt 
+  crustal_dzc.txt 
 !Name of site amplification file:
-  site_amp_tutorial.txt 
+  site_amps_dzc.txt 
 !Name of empirical filter file:
   empirical_amps.txt 
 !DynamicFlag (0=no; use 1 for dynamic corner freq), PulsingPercent (typical 50.)
@@ -97,7 +97,7 @@
 ! even if do not assign the slip weights
   slip_weights.txt 
 !Number of Sites, site coord flag (1=lat,long; 2=R,Az; 3=N,E)
-  4 2 
+  1 1 
 !If "Y" below and strike = 0.0:
 !  if site coord flag = 2, move origin of the radial line to the midpoint of
 !                         the top edge of the fault
@@ -111,7 +111,4 @@
 !                         strike of the fault
  N 
 !Coordinates of each site
-  2.5 90 
-  2.5 180 
-  2.5 264 
-  2.5 0 
+  40.85 31.17 

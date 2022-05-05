@@ -1,3 +1,7 @@
+* Decorators are problematic
+
+* Refactor duplicate code
+
 * Misc object cannot be shared for multiple simulations.
 
 * Add velocity, displacement, gmim functions.
@@ -5,5 +9,3 @@
 * I can still move all inputs to another folder. This way it is very distracting.
 
 * Prepare a tree showing all attributes and methods.
-
-* When GMM plots (plot_bssa14, plot_kaah15) gets no color input, plus/minus std curves have different colors. Let's get a single color at the beginning of the function and go with that.
