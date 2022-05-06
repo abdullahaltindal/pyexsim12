@@ -1,7 +1,5 @@
-* make a _plot function with (x, y, plot_dict, plot_type). Maybe add bs for epsilon&misfit to plot_type.
-
-* Refactor duplicate code
-
 * Misc object cannot be shared for multiple simulations.
 
 * Prepare a tree showing all attributes and methods.
+
+* Might add example uses to some methods.

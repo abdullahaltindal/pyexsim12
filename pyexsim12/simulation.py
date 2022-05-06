@@ -29,6 +29,7 @@ def _unpack_plot_dict(plot_dict):
 def _unpack_plot_dict_gmm(plot_dict):
     """ Unpack plot dict used for plotting options for GMMs"""
     color = plot_dict.get("color", None)
+    pm_sigma = plot_dict.get("pm_sigma", True)
     linestyle = plot_dict.get("linestyle", "solid")
     linestyle_pm = plot_dict.get("linestyle_pm", "dashed")
     label = plot_dict.get("label", "BSSA14(Median)")
@@ -36,7 +37,7 @@ def _unpack_plot_dict_gmm(plot_dict):
     alpha = plot_dict.get("alpha", 1.0)
     linewidth = plot_dict.get("linewidth", 1.5)
     linewidth_pm = plot_dict.get("linewidth_pm", 1.5)
-    return color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm
+    return color, pm_sigma, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm
 
 
 def _fas(acc, dt, smooth, roll):
@@ -112,6 +113,48 @@ def _plot(x, y, axis, plot_dict, plot_type):
         return fig
     else:
         axis.plot(x, y, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+
+
+def _plot_gmm(x, y, axis, plot_dict, y_p=None, y_m=None):
+    """ Internal plot function for GMMs """
+    color, pm_sigma, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm = _unpack_plot_dict_gmm(
+        plot_dict)
+    if axis is None:
+        fig = plt.figure()
+        line, = plt.plot(x, y, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                         linewidth=linewidth)
+        if pm_sigma:
+            color = line.get_color()
+            plt.plot(x, y_p, label=label_pm, alpha=alpha, color=color,
+                     linestyle=linestyle_pm, linewidth=linewidth_pm)
+            plt.plot(x, y_m, alpha=alpha, color=color,
+                     linestyle=linestyle_pm, linewidth=linewidth_pm)
+            _set_labels("rp")
+        return fig
+    else:
+        line, = axis.plot(x, y, label=label, alpha=alpha, color=color, linestyle=linestyle,
+                          linewidth=linewidth)
+        if pm_sigma:
+            color = line.get_color()
+            axis.plot(x, y_p, label=label_pm, alpha=alpha, color=color,
+                      linestyle=linestyle_pm, linewidth=linewidth_pm)
+            axis.plot(x, y_m, alpha=alpha, color=color,
+                      linestyle=linestyle_pm, linewidth=linewidth_pm)
+
+
+def _plot_eps(x, y, axis, plot_dict):
+    """ Internal plot function for normalized residuals (epsilon)"""
+    color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
+    if axis is None:
+        fig = plt.figure()
+        plt.plot(x, y, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+        plt.xlabel("Period (s)")
+        plt.ylabel("Normalized Residual, $\epsilon$")
+        plt.hlines(0, min(x), max(x), color="black", linestyle="dashed")
+        return fig
+    else:
+        axis.plot(x, y, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+        axis.hlines(0, min(x), max(x), color="black", linestyle="dashed")
 
 
 class Simulation:
@@ -410,8 +453,10 @@ class Simulation:
             if filt_dict is False:
                 return time, acc
             else:
+                # noinspection PyTupleAssignmentBalance
                 b, a = signal.butter(N=N, Wn=Wn, btype=btype)
                 filt_acc = signal.filtfilt(b, a, acc)
+                # noinspection PyUnresolvedReferences
                 tukey = signal.tukey(len(filt_acc), tukey)
                 filt_acc = tukey * filt_acc
                 return time, filt_acc
@@ -875,7 +920,7 @@ class Simulation:
             sgm_ln_sa = np.array([gmm.bssa14.bssa14_sigma(mw, rjb, vs30, t) for t in gmm.bssa14.periods])
             return sa, sgm_ln_sa
 
-    def plot_bssa14(self, site, vs30, region=1, *, mech=None, z1=None, unit="cm", pm_sigma=True, axis=None,
+    def plot_bssa14(self, site, vs30, region=1, *, mech=None, z1=None, unit="cm", axis=None,
                     plot_dict=None):
         """
         Plot the estimated response spectrum for the rupture scenario at the using the GMM of BSSA14. This function gets
@@ -887,12 +932,12 @@ class Simulation:
             mech: Faulting mechanism (0: Unspecified, SS: Strike-slip, N: Normal, R: Reverse)
             z1: Depth from the ground surface to the 1.0 km∕s shear-wave horizon
             unit: "cm" for cm/s/s, "g", for g.
-            pm_sigma: When True, also plots plus-minus standard deviation with dashed lines.
             axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
             plot_dict (dict): (optional) A dict that contains plotting options. Missing keys are replaced with default
             values.
                 Keys are:
                         "color": Line color. Default is None.
+                        "pm_sigma": When True, also plots plus-minus standard deviation with dashed lines.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
                         "linestyle_pm": Linestyle for plus-minus standard deviation.
                         "label": Label for the median GMM. Default is "BSSA14(Median)".
@@ -905,34 +950,10 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm = _unpack_plot_dict_gmm(
-            plot_dict)
 
         mw, rjb, mech = self._get_gmm_params(site, mech)
         sa, p_sigma, m_sigma = gmm.bssa14.bssa14_vectorized(mw, rjb, vs30, mech, region, z1=z1, unit=unit)
-        if axis is None:
-            fig = plt.figure()
-            line, = plt.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                             linewidth=linewidth)
-            if pm_sigma:
-                color = line.get_color()
-                plt.plot(gmm.bssa14.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
-                         linestyle=linestyle_pm, linewidth=linewidth_pm)
-                plt.plot(gmm.bssa14.periods, m_sigma, alpha=alpha, color=color,
-                         linestyle=linestyle_pm, linewidth=linewidth_pm)
-                plt.xlabel("Period (s)")
-                plt.ylabel("Spectral Acceleration ($cm/s^2$)")
-            return fig
-        else:
-            line, = axis.plot(gmm.bssa14.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                              linewidth=linewidth)
-            if pm_sigma:
-                color = line.get_color()
-                axis.plot(gmm.bssa14.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
-                          linestyle=linestyle_pm, linewidth=linewidth_pm)
-                axis.plot(gmm.bssa14.periods, m_sigma, alpha=alpha, color=color,
-                          linestyle=linestyle_pm, linewidth=linewidth_pm)
+        return _plot_gmm(gmm.bssa14.periods, sa, axis, plot_dict, p_sigma, m_sigma)
 
     def kaah15(self, site, vs30, *, mech=None, unit="cm", pm_sigma=True):
         """
@@ -967,7 +988,7 @@ class Simulation:
             sgm_ln_sa = np.array([gmm.kaah15.kaah15_sigma(mw, t) for t in gmm.kaah15.periods])
             return sa, sgm_ln_sa
 
-    def plot_kaah15(self, site, vs30, *, mech=None, unit="cm", pm_sigma=True, axis=None,
+    def plot_kaah15(self, site, vs30, *, mech=None, unit="cm", axis=None,
                     plot_dict=None):
         """
         Plot the estimated response spectrum for the rupture scenario at the using the GMM of KAAH15. This function gets
@@ -979,12 +1000,12 @@ class Simulation:
                   from the Simulation object. If the mechanism is undefined in the Simulation object, raises an
                   Exception. Default is None.
             unit: "cm" for cm/s/s, "g", for g. Default is "cm".
-            pm_sigma: When True, also plots plus-minus standard deviation with dashed lines. Default is True.
             axis (plt.axes): A matplotlib axes object. If provided, acceleration history is plotted at the input axis.
             plot_dict (dict):  (optional) A dict that contains plotting options. Missing keys are replaced with default
             values.
                 Keys are:
                         "color": Line color. Default is None.
+                        "pm_sigma": When True, also plots plus-minus standard deviation with dashed lines.
                         "linestyle": Linestyle for median GMM. Default is "solid". Some options are: "dashed", "dotted".
                         "linestyle_pm": Linestyle for plus-minus standard deviation.
                         "label": Label for the median GMM. Default is "KAAH15(Median)".
@@ -997,36 +1018,12 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm = _unpack_plot_dict_gmm(
-            plot_dict)
 
         mw, rjb, mech = self._get_gmm_params(site, mech)
         if mech == "U":
             raise Exception("Faulting mechanism should be entered for KAAH15 GMM.")
         sa, p_sigma, m_sigma = gmm.kaah15.kaah15_vectorized(mw, rjb, vs30, mech, unit=unit)
-        if axis is None:
-            fig = plt.figure()
-            line, = plt.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                             linewidth=linewidth)
-            if pm_sigma:
-                color = line.get_color()
-                plt.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
-                         linestyle=linestyle_pm, linewidth=linewidth_pm)
-                plt.plot(gmm.kaah15.periods, m_sigma, alpha=alpha, color=color,
-                         linestyle=linestyle_pm, linewidth=linewidth_pm)
-                plt.xlabel("Period (s)")
-                plt.ylabel("Spectral Acceleration ($cm/s^2$)")
-            return fig
-        else:
-            line, = axis.plot(gmm.kaah15.periods, sa, label=label, alpha=alpha, color=color, linestyle=linestyle,
-                              linewidth=linewidth)
-            if pm_sigma:
-                color = line.get_color()
-                axis.plot(gmm.kaah15.periods, p_sigma, label=label_pm, alpha=alpha, color=color,
-                          linestyle=linestyle_pm, linewidth=linewidth_pm)
-                axis.plot(gmm.kaah15.periods, m_sigma, alpha=alpha, color=color,
-                          linestyle=linestyle_pm, linewidth=linewidth_pm)
+        return _plot_gmm(gmm.kaah15.periods, sa, axis, plot_dict, p_sigma, m_sigma)
 
     def bssa14_eps(self, site, vs30, region=1, *, mech=None, z1=None):
         """
@@ -1120,19 +1117,7 @@ class Simulation:
 
         epsilon = self.bssa14_eps(site, vs30, region, mech=mech, z1=z1)
         periods = gmm.bssa14.periods
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
-
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Period (s)")
-            plt.ylabel("Normalized Residual, $\epsilon$")
-            plt.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
-            return fig
-        else:
-            axis.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
+        return _plot_eps(periods, epsilon, axis, plot_dict)
 
     def plot_kaah15_eps(self, site, vs30, *, axis=None, mech=None, plot_dict=None):
         """
@@ -1158,19 +1143,7 @@ class Simulation:
 
         epsilon = self.kaah15_eps(site, vs30, mech=mech)
         periods = gmm.kaah15.periods
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
-
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Period (s)")
-            plt.ylabel("Normalized Residual, $\epsilon$")
-            plt.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
-            return fig
-        else:
-            axis.plot(periods, epsilon, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            axis.hlines(0, min(periods), max(periods), color="black", linestyle="dashed")
+        return _plot_eps(periods, epsilon, axis, plot_dict)
 
     def plot_slip(self, exsim_folder="exsim12", figsize=None):
         """
@@ -1274,5 +1247,6 @@ def create_slip_file(slip_matrix, filename, exsim_folder="exsim12"):
         filename (str): Filename for the input slip weights file.
 
     """
+    # noinspection PyTypeChecker
     np.savetxt(f"./{exsim_folder}/{filename}", slip_matrix, fmt="%1.3f", delimiter="\t")
     return filename

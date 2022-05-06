@@ -1,6 +1,20 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from pyexsim12.simulation import _unpack_plot_dict
 
+
+# def _plot_amp(x, y, axis, plot_dict):
+#     """ Internal function for plotting amplification functions """
+#     color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
+#     if axis is None:
+#         fig = plt.figure()
+#         plt.plot(x, y, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+#         plt.xlabel("Frequency (Hz)")
+#         plt.ylabel("Amplification")
+#         return fig
+#     else:
+#         axis.plot(x, y, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+#
 
 class Amplification:
     """
@@ -28,6 +42,23 @@ class Amplification:
                f"Crustal amplification filename: {crustal_amp} \n" \
                f"Empirical amplification filename: {empirical_amp}"
 
+    def _plot_amp(self, filename, axis, plot_dict):
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
+        exsim_folder = self.exsim_folder
+        amp_file = pd.read_csv(f"./{exsim_folder}/{filename}",
+                               comment="!", skiprows=2, names=["Frequency", "Amplification"], delim_whitespace=True)
+        amp_file.dropna(inplace=True)
+        freq = amp_file["Frequency"]
+        amp = amp_file["Amplification"]
+        if axis is None:
+            fig = plt.figure()
+            plt.plot(freq, amp, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+            plt.xlabel("Frequency (Hz)")
+            plt.ylabel("Amplification")
+            return fig
+        else:
+            axis.plot(freq, amp, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+
     def plot_site_amp(self, axis=None, plot_dict=None):
         """
         Plot the site amplification against frequency. After running the plot_site_amp method, the user can modify the
@@ -48,29 +79,9 @@ class Amplification:
         """
         if plot_dict is None:
             plot_dict = {}
-        exsim_folder = self.exsim_folder
         filename = self.site_amp
-        amp_file = pd.read_csv(f"./{exsim_folder}/{filename}",
-                               comment="!", skiprows=2, names=["Frequency", "Amplification"], delim_whitespace=True)
-        amp_file.dropna(inplace=True)
 
-        # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
-
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(amp_file["Frequency"], amp_file["Amplification"], label=label, color=color,
-                     linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("Amplification")
-            return fig
-        else:
-            axis.plot(amp_file["Frequency"], amp_file["Amplification"], label=label, color=color,
-                      linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+        return self._plot_amp(filename=filename, axis=axis, plot_dict=plot_dict)
 
     def plot_crustal_amp(self, axis=None, plot_dict=None):
         """
@@ -93,29 +104,5 @@ class Amplification:
 
         if plot_dict is None:
             plot_dict = {}
-        exsim_folder = self.exsim_folder
         filename = self.crustal_amp
-        amp_file = pd.read_csv(f"./{exsim_folder}/{filename}",
-                               comment="!", skiprows=2, names=["Frequency", "Amplification"], delim_whitespace=True)
-        amp_file.dropna(inplace=True)
-
-        # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
-
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(amp_file["Frequency"], amp_file["Amplification"], label=label, color=color,
-                     linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("Amplification")
-            return fig
-        else:
-            axis.plot(amp_file["Frequency"], amp_file["Amplification"], label=label, color=color,
-                      linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-
-
-
+        return self._plot_amp(filename=filename, axis=axis, plot_dict=plot_dict)
