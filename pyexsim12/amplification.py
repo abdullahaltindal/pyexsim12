@@ -3,19 +3,6 @@ import matplotlib.pyplot as plt
 from pyexsim12.simulation import _unpack_plot_dict
 
 
-# def _plot_amp(x, y, axis, plot_dict):
-#     """ Internal function for plotting amplification functions """
-#     color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
-#     if axis is None:
-#         fig = plt.figure()
-#         plt.plot(x, y, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-#         plt.xlabel("Frequency (Hz)")
-#         plt.ylabel("Amplification")
-#         return fig
-#     else:
-#         axis.plot(x, y, label=label, color=color, linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-#
-
 class Amplification:
     """
     Amplification information.
