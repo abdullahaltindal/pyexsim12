@@ -12,6 +12,43 @@ from scipy import integrate
 
 plt.interactive(True)
 
+_DEFAULT_PERIODS = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
+                                   np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+
+
+def _unpack_plot_dict(plot_dict):
+    """ Unpack plot dict used for plotting options"""
+    color = plot_dict.get("color", None)
+    linestyle = plot_dict.get("linestyle", "solid")
+    label = plot_dict.get("label", None)
+    alpha = plot_dict.get("alpha", 1.0)
+    linewidth = plot_dict.get("linewidth", 1.5)
+    return color, linestyle, label, alpha, linewidth
+
+
+def _unpack_plot_dict_gmm(plot_dict):
+    """ Unpack plot dict used for plotting options for GMMs"""
+    color = plot_dict.get("color", None)
+    linestyle = plot_dict.get("linestyle", "solid")
+    linestyle_pm = plot_dict.get("linestyle_pm", "dashed")
+    label = plot_dict.get("label", "BSSA14(Median)")
+    label_pm = plot_dict.get("label_pm", "BSSA14(Median$\pm\sigma$)")
+    alpha = plot_dict.get("alpha", 1.0)
+    linewidth = plot_dict.get("linewidth", 1.5)
+    linewidth_pm = plot_dict.get("linewidth_pm", 1.5)
+    return color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm
+
+
+def _fas(acc, dt, smooth, roll):
+    """ Calculate Fourier amplitude spectra """
+    length = len(acc)
+    fas = np.fft.fft(acc)
+    freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
+    fas = np.abs(fas[:length // 2]) * dt
+    if smooth:
+        fas = pd.Series(fas).rolling(roll).mean()
+    return freq, fas
+
 
 class Simulation:
     """
@@ -349,11 +386,7 @@ class Simulation:
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         time, acc = self.get_acc(site, filt_dict=filt_dict)
         if axis is None:
@@ -390,11 +423,7 @@ class Simulation:
             raise Exception("Record not found on Simulation.rec_motions")
 
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         acc, dt = self.rec_motions[site, direction]
         time = np.arange(0, dt * len(acc), dt)
@@ -430,8 +459,7 @@ class Simulation:
         """
         dt = self.path.time_pads.delta_t
         if periods is None:
-            periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
-                                      np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+            periods = _DEFAULT_PERIODS
         _, acc_g = self.get_acc(site, filt_dict=filt_dict)
         ksi = self.misc.damping / 100
         spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
@@ -452,8 +480,7 @@ class Simulation:
         """
         acc_g, dt = self.rec_motions[site, direction]
         if periods is None:
-            periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
-                                      np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+            periods = _DEFAULT_PERIODS
         ksi = self.misc.damping / 100
         spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
@@ -500,15 +527,10 @@ class Simulation:
         periods, misfit = self.misfit_rp(site, direction, periods)
 
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if periods is None:
-            periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
-                                      np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+            periods = _DEFAULT_PERIODS
         if axis is None:
             fig = plt.figure()
             plt.plot(periods, misfit, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -543,15 +565,10 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if periods is None:
-            periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
-                                      np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+            periods = _DEFAULT_PERIODS
         periods, spec_acc = self.get_rp(site, periods)
         if axis is None:
             fig = plt.figure()
@@ -588,15 +605,10 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if periods is None:
-            periods = np.concatenate((np.arange(0.05, 0.105, 0.005), np.arange(0.1, 0.21, 0.01),
-                                      np.arange(0.2, 1.02, 0.02), np.arange(1, 5.2, 0.2), np.array([7.5, 10])))
+            periods = _DEFAULT_PERIODS
         periods, spec_acc = self.get_rec_rp(site, direction, periods)
         if axis is None:
             fig = plt.figure()
@@ -632,13 +644,7 @@ class Simulation:
         """
         dt = self.path.time_pads.delta_t
         _, acc_g = self.get_acc(site, filt_dict=filt_dict)
-        length = len(acc_g)
-        fas = np.fft.fft(acc_g)
-        freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
-        fas = np.abs(fas[:length // 2]) * dt
-        if smooth:
-            fas = pd.Series(fas).rolling(roll).mean()
-        return freq, fas
+        return _fas(acc_g, dt, smooth, roll)
 
     def get_rec_fas(self, site, direction, smooth=True, roll=9):
         """
@@ -654,13 +660,7 @@ class Simulation:
             fas: Fourier amplitudes in cm/s.
         """
         acc_g, dt = self.rec_motions[site, direction]
-        length = len(acc_g)
-        fas = np.fft.fft(acc_g)
-        freq = np.linspace(0.0, 1 / (2 * dt), length // 2)
-        fas = np.abs(fas[:length // 2]) * dt
-        if smooth:
-            fas = pd.Series(fas).rolling(roll).mean()
-        return freq, fas
+        return _fas(acc_g, dt, smooth, roll)
 
     def misfit_fas(self, site, direction, smooth=True, roll=9):
         """
@@ -706,11 +706,7 @@ class Simulation:
 
         freq, misfit = self.misfit_fas(site, direction, smooth, roll)
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if axis is None:
             fig = plt.figure()
@@ -750,11 +746,7 @@ class Simulation:
             plot_dict = {}
 
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         freq, fas = self.get_fas(site, smooth, roll)
         if axis is None:
@@ -795,11 +787,7 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         freq, fas = self.get_rec_fas(site, direction, smooth, roll)
         if axis is None:
@@ -837,6 +825,17 @@ class Simulation:
             rjb = float(temp[13].split("   ")[-1])
         return rjb
 
+    def _get_gmm_params(self, site, mech):
+        mw = self.source.source_spec.mw
+        rjb = self.get_rjb(site)
+        if mech is None:
+            mech = self.source.fault_geom.fault_type
+            if mech == "U":
+                mech = 0
+            elif mech == "S":
+                mech = "SS"
+        return mw, rjb, mech
+
     def bssa14(self, site, vs30, region=1, *, mech=None, z1=None, unit="cm", pm_sigma=True):
         """
         Calculate the estimated response spectrum for the rupture scenario at the using the GMM of BSSA14. This function
@@ -860,14 +859,7 @@ class Simulation:
                 sa: Median spectral acceleration array.
                 sgm_ln_sa: Sigma of log(spectral_acceleration), in log units of g.
         """
-        mw = self.source.source_spec.mw
-        rjb = self.get_rjb(site)
-        if mech is None:
-            mech = self.source.fault_geom.fault_type
-            if mech == "U":
-                mech = 0
-            elif mech == "S":
-                mech = "SS"
+        mw, rjb, mech = self._get_gmm_params(site, mech)
         sa, p_sigma, m_sigma = gmm.bssa14.bssa14_vectorized(mw, rjb, vs30, mech, region, z1=z1, unit=unit)
         if pm_sigma:
             return sa, p_sigma, m_sigma
@@ -906,23 +898,10 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        linestyle_pm = plot_dict.get("linestyle_pm", "dashed")
-        label = plot_dict.get("label", "BSSA14(Median)")
-        label_pm = plot_dict.get("label_pm", "BSSA14(Median$\pm\sigma$)")
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
-        linewidth_pm = plot_dict.get("linewidth_pm", 1.5)
+        color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm = _unpack_plot_dict_gmm(
+            plot_dict)
 
-        mw = self.source.source_spec.mw
-        rjb = self.get_rjb(site)
-        if mech is None:
-            mech = self.source.fault_geom.fault_type
-            if mech == "U":
-                mech = 0
-            elif mech == "S":
-                mech = "SS"
+        mw, rjb, mech = self._get_gmm_params(site, mech)
         sa, p_sigma, m_sigma = gmm.bssa14.bssa14_vectorized(mw, rjb, vs30, mech, region, z1=z1, unit=unit)
         if axis is None:
             fig = plt.figure()
@@ -970,14 +949,9 @@ class Simulation:
                 sa: Median spectral acceleration array.
                 sgm_ln_sa: Sigma of log(spectral_acceleration), in log units of g.
         """
-        mw = self.source.source_spec.mw
-        rjb = self.get_rjb(site)
-        if mech is None:
-            mech = self.source.fault_geom.fault_type
-            if mech == "U":
-                raise Exception("Faulting mechanism should be entered for KAAH15 GMM.")
-            elif mech == "S":
-                mech = "SS"
+        mw, rjb, mech = self._get_gmm_params(site, mech)
+        if mech == "U":
+            raise Exception("Faulting mechanism should be entered for KAAH15 GMM.")
         sa, p_sigma, m_sigma = gmm.kaah15.kaah15_vectorized(mw, rjb, vs30, mech, unit=unit)
         if pm_sigma:
             return sa, p_sigma, m_sigma
@@ -1016,23 +990,12 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        linestyle_pm = plot_dict.get("linestyle_pm", "dashed")
-        label = plot_dict.get("label", "KAAH15(Median)")
-        label_pm = plot_dict.get("label_pm", "KAAH15(Median$\pm\sigma$)")
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
-        linewidth_pm = plot_dict.get("linewidth_pm", 1.5)
+        color, linestyle, linestyle_pm, label, label_pm, alpha, linewidth, linewidth_pm = _unpack_plot_dict_gmm(
+            plot_dict)
 
-        mw = self.source.source_spec.mw
-        rjb = self.get_rjb(site)
-        if mech is None:
-            mech = self.source.fault_geom.fault_type
-            if mech == "U":
-                mech = 0
-            elif mech == "S":
-                mech = "SS"
+        mw, rjb, mech = self._get_gmm_params(site, mech)
+        if mech == "U":
+            raise Exception("Faulting mechanism should be entered for KAAH15 GMM.")
         sa, p_sigma, m_sigma = gmm.kaah15.kaah15_vectorized(mw, rjb, vs30, mech, unit=unit)
         if axis is None:
             fig = plt.figure()
@@ -1150,11 +1113,7 @@ class Simulation:
         epsilon = self.bssa14_eps(site, vs30, region, mech=mech, z1=z1)
         periods = gmm.bssa14.periods
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if axis is None:
             fig = plt.figure()
@@ -1192,11 +1151,7 @@ class Simulation:
         epsilon = self.kaah15_eps(site, vs30, mech=mech)
         periods = gmm.kaah15.periods
         # Unpack plotting options and set default values for missing keys:
-        color = plot_dict.get("color", None)
-        linestyle = plot_dict.get("linestyle", "solid")
-        label = plot_dict.get("label", None)
-        alpha = plot_dict.get("alpha", 1.0)
-        linewidth = plot_dict.get("linewidth", 1.5)
+        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if axis is None:
             fig = plt.figure()
