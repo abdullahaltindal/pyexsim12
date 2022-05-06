@@ -1,11 +1,7 @@
-* Decorators are problematic
+* make a _plot function with (x, y, plot_dict, plot_type). Maybe add bs for epsilon&misfit to plot_type.
 
 * Refactor duplicate code
 
 * Misc object cannot be shared for multiple simulations.
-
-* Add velocity, displacement, gmim functions.
-
-* I can still move all inputs to another folder. This way it is very distracting.
 
 * Prepare a tree showing all attributes and methods.

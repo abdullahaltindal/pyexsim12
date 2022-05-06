@@ -2,13 +2,13 @@ import os
 from datetime import date
 import warnings
 import numpy as np
-from numba import jit
 import matplotlib.pyplot as plt
 import gmm
 from scipy.interpolate import interp1d
 import pandas as pd
 from scipy import signal
 from scipy import integrate
+from pyexsim12._spectra import spectral_acc
 
 plt.interactive(True)
 
@@ -48,6 +48,70 @@ def _fas(acc, dt, smooth, roll):
     if smooth:
         fas = pd.Series(fas).rolling(roll).mean()
     return freq, fas
+
+
+def _set_labels(plot_type):
+    """
+    Set axis labels
+    Args:
+        plot_type (str): One of the following:
+            "acc": For acceleration plot. Sets xlabel to "Time (s)" and ylabel to "Acceleration ($cm/s^2$)"
+            "rp": For response spectra plot. Sets xlabel to "Period (s)" and ylabel to
+                  "Spectral Acceleration ($cm/s^2$)"
+            "fas": For FAS plot. Sets xlabel to "Frequency (Hz)" and ylabel to "Fourier Amplitude ($cm/s$)".
+                   Also sets scales for both axis to "log".
+    Returns:
+        None
+    """
+    if plot_type == "acc":
+        plt.xlabel("Time (s)")
+        plt.ylabel("Acceleration ($cm/s^2$)")
+    elif plot_type == "rp":
+        plt.xlabel("Period (s)")
+        plt.ylabel("Spectral Acceleration ($cm/s^2$)")
+        plt.xscale("log")
+        plt.yscale("log")
+    elif plot_type == "fas":
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("Fourier Amplitude ($cm/s$)")
+        plt.xscale("log")
+        plt.yscale("log")
+
+
+def _plot(x, y, axis, plot_dict, plot_type):
+    """
+    Internal function for plotting
+    Args:
+        x (array_like): x values
+        y (array_like): y values
+        axis (plt.axes): A matplotlib axes object. Default is None. If None, a plt.figure object will be created.
+        plot_dict (dict):  (optional) A dict that contains plotting options. Missing keys are replaced with default
+            values.
+                Keys are:
+                        "color": Line color. Default is None.
+                        "linestyle": Linestyle. Default is "solid". Some options are: "dashed", "dotted".
+                        "label": Label for the legend. Default is None.
+                        "alpha": Transparency. Default is 1.0
+                        "linewidth": Line width. Default is 1.5.
+        plot_type (str): One of the following:
+            "acc": For acceleration plot. Sets xlabel to "Time (s)" and ylabel to "Acceleration ($cm/s^2$)"
+            "rp": For response spectra plot. Sets xlabel to "Period (s)" and ylabel to
+                  "Spectral Acceleration ($cm/s^2$)"
+            "fas": For FAS plot. Sets xlabel to "Frequency (Hz)" and ylabel to "Fourier Amplitude ($cm/s$)".
+                   Also sets scales for both axis to "log".
+
+    Returns:
+        fig: If an axis input is not provided, created figure object is returned.
+    """
+    color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
+
+    if axis is None:
+        fig = plt.figure()
+        plt.plot(x, y, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+        _set_labels(plot_type)
+        return fig
+    else:
+        axis.plot(x, y, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
 
 
 class Simulation:
@@ -385,18 +449,9 @@ class Simulation:
         if not self.has_run():
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         time, acc = self.get_acc(site, filt_dict=filt_dict)
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Time (s)")
-            plt.ylabel("Acceleration ($cm/s^2$)")
-            return fig
-        else:
-            axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
+        return _plot(time, acc, axis, plot_dict, plot_type="acc")
 
     def plot_rec_acc(self, site, direction, axis=None, plot_dict=None):
         """
@@ -430,8 +485,7 @@ class Simulation:
         if axis is None:
             fig = plt.figure()
             plt.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Time (s)")
-            plt.ylabel("Acceleration ($cm/s^2$)")
+            _set_labels("acc")
             return fig
         else:
             axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
@@ -462,7 +516,7 @@ class Simulation:
             periods = _DEFAULT_PERIODS
         _, acc_g = self.get_acc(site, filt_dict=filt_dict)
         ksi = self.misc.damping / 100
-        spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
+        spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
 
     def get_rec_rp(self, site, direction, periods=None):
@@ -482,7 +536,7 @@ class Simulation:
         if periods is None:
             periods = _DEFAULT_PERIODS
         ksi = self.misc.damping / 100
-        spec_acc = [_spectral_acc(acc_g, dt, period, ksi) for period in periods]
+        spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
 
     def misfit_rp(self, site, direction, periods=None):
@@ -564,21 +618,11 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if periods is None:
             periods = _DEFAULT_PERIODS
         periods, spec_acc = self.get_rp(site, periods)
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Period (s)")
-            plt.ylabel("Spectral Acceleration ($cm/s^2$)")
-            return fig
-        else:
-            axis.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha,
-                      linewidth=linewidth)
+        return _plot(periods, spec_acc, axis, plot_dict, plot_type="rp")
 
     def plot_rec_rp(self, site, direction, periods=None, axis=None, plot_dict=None):
         """
@@ -604,21 +648,11 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         if periods is None:
             periods = _DEFAULT_PERIODS
         periods, spec_acc = self.get_rec_rp(site, direction, periods)
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Period (s)")
-            plt.ylabel("Spectral Acceleration ($cm/s^2$)")
-            return fig
-        else:
-            axis.plot(periods, spec_acc, color=color, linestyle=linestyle, label=label, alpha=alpha,
-                      linewidth=linewidth)
+        return _plot(periods, spec_acc, axis, plot_dict, plot_type="rp")
 
     def get_fas(self, site, smooth=True, roll=9, filt_dict=None):
         """
@@ -745,22 +779,8 @@ class Simulation:
         if plot_dict is None:
             plot_dict = {}
 
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
-
         freq, fas = self.get_fas(site, smooth, roll)
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("Fourier Amplitude ($cm/s$)")
-            plt.xscale("log")
-            plt.yscale("log")
-            return fig
-        else:
-            axis.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            axis.set_xscale("log")
-            axis.set_yscale("log")
+        return _plot(freq, fas, axis, plot_dict, plot_type="fas")
 
     def plot_rec_fas(self, site, direction, axis=None, plot_dict=None, smooth=True, roll=9):
         """
@@ -786,22 +806,9 @@ class Simulation:
         """
         if plot_dict is None:
             plot_dict = {}
-        # Unpack plotting options and set default values for missing keys:
-        color, linestyle, label, alpha, linewidth = _unpack_plot_dict(plot_dict)
 
         freq, fas = self.get_rec_fas(site, direction, smooth, roll)
-        if axis is None:
-            fig = plt.figure()
-            plt.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("Fourier Amplitude ($cm/s$)")
-            plt.xscale("log")
-            plt.yscale("log")
-            return fig
-        else:
-            axis.plot(freq, fas, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
-            axis.set_xscale("log")
-            axis.set_yscale("log")
+        return _plot(freq, fas, axis, plot_dict, plot_type="fas")
 
     def get_rjb(self, site):
         """
@@ -826,6 +833,7 @@ class Simulation:
         return rjb
 
     def _get_gmm_params(self, site, mech):
+        """ Get parameters (mw, rjb and mech) for GMM calculations """
         mw = self.source.source_spec.mw
         rjb = self.get_rjb(site)
         if mech is None:
@@ -1224,73 +1232,6 @@ class Simulation:
         dt = self.path.time_pads.delta_t
         vel = integrate.cumtrapz(acc, dx=dt, initial=0)
         return time, vel
-
-
-@jit()
-def _newmark(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
-    """
-    Solves the equation of motion for a SDOF system under ground excitation, with Newmark's Beta method.
-
-    Args:
-        acc_g: Ground acceleration
-        dt: Time step
-        period: Period of the SDOF system.
-        ksi: Damping ratio. Default is 0.05.
-        beta: Beta parameter for the numerical calculation. Default is 0.25.
-        gamma: Gamma parameter for the numerical calculation. Default is 0.5.
-
-    Returns:
-        disp: Ground displacement.
-        vel: Ground velocity.
-        acc_total: Total acceleration.
-    """
-    if period == 0:
-        period = 0.001
-    m = 1
-    k = 4 * np.pi ** 2 * m / period ** 2
-    c = ksi * 2 * np.sqrt(m * k)
-    acc = np.zeros(len(acc_g))
-    vel = np.zeros(len(acc_g))
-    disp = np.zeros(len(acc_g))
-    p_hat = np.zeros(len(acc_g))
-
-    # Initial calculations
-    acc[0] = (-acc_g[0]) / m
-    a1 = m / beta / dt ** 2 + gamma * c / beta / dt
-    a2 = m / beta / dt + (gamma / beta - 1) * c
-    a3 = m * (1 / 2 / beta - 1) + dt * (gamma / 2 / beta - 1)
-    k_hat = k + a1
-    p = -m * acc_g
-
-    for i, ag in enumerate(acc_g[:-1]):
-        p_hat[i + 1] = p[i + 1] + a1 * disp[i] + a2 * vel[i] + a3 * acc[i]
-        disp[i + 1] = p_hat[i + 1] / k_hat
-        vel[i + 1] = gamma / beta / dt * (disp[i + 1] - disp[i]) + (1 - gamma / beta) * vel[i] + dt * (
-                1 - gamma / 2 / beta) * acc[i]
-        acc[i + 1] = 1 / beta / dt ** 2 * (disp[i + 1] - disp[i]) - vel[i] / beta / dt - (1 / 2 / beta - 1) * acc[i]
-    acc_total = (acc + acc_g)
-    return disp, vel, acc_total
-
-
-@jit()
-def _spectral_acc(acc_g, dt, period, ksi=0.05, beta=0.25, gamma=0.5):
-    """
-    Calculates spectral acceleration corresponding to a given period, under ground excitation.
-
-    Args:
-        acc_g: Ground acceleration.
-        dt: Time step
-        period: Period of the SDOF system.
-        ksi: Damping ratio. Default is 0.05.
-        beta: Beta parameter for the numerical calculation. Default is 0.25.
-        gamma: Gamma parameter for the numerical calculation. Default is 0.5.
-
-    Returns:
-        sa: Spectral acceleration.
-    """
-    _, _, acc = _newmark(acc_g, dt, period, ksi=ksi, beta=beta, gamma=gamma)
-    sa = max(np.abs(acc))
-    return sa
 
 
 def create_amp(freq, amp, filename, header=None, exsim_folder="exsim12"):
