@@ -33,5 +33,6 @@ sim2 = Simulation(source2, path, amplification, Misc(), sites)
 sim3 = Simulation(source3, path, amplification, Misc(), sites)
 
 sim.create_input_file(save=True)
-sim.run(override=False)
+sim.run(override=True)
 
+#%%

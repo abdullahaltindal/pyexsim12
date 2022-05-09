@@ -411,7 +411,7 @@ class Simulation:
             if not self.has_run():
                 os.system(f"cd {exsim_folder} & EXSIM12.exe {inputs_filename}")
 
-    def get_acc(self, site, filt_dict=False):
+    def get_acc(self, site, filt_dict=False, trial=1):
         """
         Returns the simulated acceleration history and time arrays for the given site. Units in cm/s/s
         Args:
@@ -426,6 +426,7 @@ class Simulation:
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
                 tapered region.
+            trial (int): Trial number.
 
         Returns:
             time: Time array in s
@@ -447,7 +448,7 @@ class Simulation:
                             "using Simulation.run() method.")
         else:
             stem = self.misc.stem
-            filename = f"{stem}S{str(site).zfill(3)}iter{str(no_of_trials).zfill(3)}.acc"
+            filename = f"{stem}S{str(site).zfill(3)}iter{str(trial).zfill(3)}.acc"
             acc_data = np.genfromtxt(f"./{exsim_folder}/ACC/{filename}", skip_header=16)
             time = acc_data[:, 0]
             acc = acc_data[:, 1]
@@ -462,7 +463,7 @@ class Simulation:
                 filt_acc = tukey * filt_acc
                 return time, filt_acc
 
-    def plot_acc(self, site, axis=None, plot_dict=None, filt_dict=False):
+    def plot_acc(self, site, axis=None, plot_dict=None, filt_dict=False, trial=1):
         """
         Plot the simulated acceleration history at a site. After running the plot_acc method, the user can modify the
         created plot or axis with all the functionalities of the matplotlib.pyplot module.
@@ -487,6 +488,7 @@ class Simulation:
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
                 tapered region.
+            trial (int): Trial number.
         Returns:
             fig: If an axis input is not provided, created figure object is returned.
         """
@@ -496,7 +498,7 @@ class Simulation:
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
 
-        time, acc = self.get_acc(site, filt_dict=filt_dict)
+        time, acc = self.get_acc(site, filt_dict=filt_dict, trial=1)
         return _plot(time, acc, axis, plot_dict, plot_type="acc")
 
     def plot_rec_acc(self, site, direction, axis=None, plot_dict=None):
@@ -536,7 +538,7 @@ class Simulation:
         else:
             axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
 
-    def get_rp(self, site, periods=None, filt_dict=False):
+    def get_rp(self, site, periods=None, filt_dict=False, trial=1):
         """
         Calculates the response spectrum for the Simulation object at the given site.
         Returns the periods and spectral acceleration values.
@@ -552,6 +554,7 @@ class Simulation:
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
                 tapered region.
+            trial (int): Trial number.
 
         Returns:
             periods: Vibration periods for spectral acceleration calculation.
@@ -560,7 +563,7 @@ class Simulation:
         dt = self.path.time_pads.delta_t
         if periods is None:
             periods = _DEFAULT_PERIODS
-        _, acc_g = self.get_acc(site, filt_dict=filt_dict)
+        _, acc_g = self.get_acc(site, filt_dict=filt_dict, trial=trial)
         ksi = self.misc.damping / 100
         spec_acc = [spectral_acc(acc_g, dt, period, ksi) for period in periods]
         return np.array(periods), np.array(spec_acc)
@@ -700,7 +703,7 @@ class Simulation:
         periods, spec_acc = self.get_rec_rp(site, direction, periods)
         return _plot(periods, spec_acc, axis, plot_dict, plot_type="rp")
 
-    def get_fas(self, site, smooth=True, roll=9, filt_dict=False):
+    def get_fas(self, site, smooth=True, roll=9, filt_dict=False, trial=1):
         """
         Get the Fourier amplitude spectrum of the simulated motion by fast Fourier transformation algorithm at a given
         site.
@@ -718,12 +721,13 @@ class Simulation:
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
                 tapered region.
+            trial (int): Trial number.
         Returns:
             freq: Frequency values in Hz.
             fas: Fourier amplitudes in cm/s.
         """
         dt = self.path.time_pads.delta_t
-        _, acc_g = self.get_acc(site, filt_dict=filt_dict)
+        _, acc_g = self.get_acc(site, filt_dict=filt_dict, trial=trial)
         return _fas(acc_g, dt, smooth, roll)
 
     def get_rec_fas(self, site, direction, smooth=True, roll=9):
@@ -1183,7 +1187,7 @@ class Simulation:
         plt.xlabel("Subfault No. (Along length)", fontsize=14)
         return fig
 
-    def get_vel(self, site, filt_dict=False):
+    def get_vel(self, site, filt_dict=False, trial=1):
         """
         Integrates the simulated accelerogram to obtain the velocity history.
         Args:
@@ -1197,12 +1201,13 @@ class Simulation:
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
                 tapered region.
+            trial (int): Trial number.
 
         Returns:
             time: Time array in s
             acc: Velocity array in cm/s
         """
-        time, acc = self.get_acc(site, filt_dict)
+        time, acc = self.get_acc(site, filt_dict, trial=trial)
         dt = self.path.time_pads.delta_t
         vel = integrate.cumtrapz(acc, dx=dt, initial=0)
         return time, vel

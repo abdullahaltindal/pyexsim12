@@ -37,7 +37,7 @@
 !Enter type of risetime (1=original, 2=1/f0)
  1 
 !tpadl, tpadt, delta t (length of 0pads at front and back of time series, timestep)
- 50.0 20.0 0.01 
+ 50.0 20.0 0.005 
 !beta , rho
   3.7 2.8 
 !Geometric spreading: this example is for bilinear with transition at 40km
