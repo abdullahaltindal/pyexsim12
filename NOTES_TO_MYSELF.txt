@@ -1,5 +1,9 @@
 * Misc object cannot be shared for multiple simulations.
 
-* Prepare a tree showing all attributes and methods.
+* Add fs to filtering function in get_acc, so that user input will directly be in frequencies,  not btwn 0-1
 
-* Might add example uses to some methods.
+* Prevent attempting to run the simulation if the input file is not saved.
+
+* save_acc
+
+* Change integration algorithm

@@ -32,8 +32,8 @@ def _unpack_plot_dict_gmm(plot_dict):
     pm_sigma = plot_dict.get("pm_sigma", True)
     linestyle = plot_dict.get("linestyle", "solid")
     linestyle_pm = plot_dict.get("linestyle_pm", "dashed")
-    label = plot_dict.get("label", "BSSA14(Median)")
-    label_pm = plot_dict.get("label_pm", "BSSA14(Median$\pm\sigma$)")
+    label = plot_dict.get("label", "GMM(Median)")
+    label_pm = plot_dict.get("label_pm", "GMM(Median$\pm\sigma$)")
     alpha = plot_dict.get("alpha", 1.0)
     linewidth = plot_dict.get("linewidth", 1.5)
     linewidth_pm = plot_dict.get("linewidth_pm", 1.5)
@@ -411,16 +411,17 @@ class Simulation:
             if not self.has_run():
                 os.system(f"cd {exsim_folder} & EXSIM12.exe {inputs_filename}")
 
-    def get_acc(self, site, filt_dict=None):
+    def get_acc(self, site, filt_dict=False):
         """
         Returns the simulated acceleration history and time arrays for the given site. Units in cm/s/s
         Args:
             site (int): Site number
-            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filter will be applied.
             Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
                 "N": The order of the filter. Default is 4.
                 "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
                        bandpass and bandstop filters, Wn is a length-2 sequence.
+
                 "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
                                 Default is 'bandpass'.
                 "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
@@ -461,7 +462,7 @@ class Simulation:
                 filt_acc = tukey * filt_acc
                 return time, filt_acc
 
-    def plot_acc(self, site, axis=None, plot_dict=None, filt_dict=None):
+    def plot_acc(self, site, axis=None, plot_dict=None, filt_dict=False):
         """
         Plot the simulated acceleration history at a site. After running the plot_acc method, the user can modify the
         created plot or axis with all the functionalities of the matplotlib.pyplot module.
@@ -535,7 +536,7 @@ class Simulation:
         else:
             axis.plot(time, acc, color=color, linestyle=linestyle, label=label, alpha=alpha, linewidth=linewidth)
 
-    def get_rp(self, site, periods=None, filt_dict=None):
+    def get_rp(self, site, periods=None, filt_dict=False):
         """
         Calculates the response spectrum for the Simulation object at the given site.
         Returns the periods and spectral acceleration values.
@@ -699,7 +700,7 @@ class Simulation:
         periods, spec_acc = self.get_rec_rp(site, direction, periods)
         return _plot(periods, spec_acc, axis, plot_dict, plot_type="rp")
 
-    def get_fas(self, site, smooth=True, roll=9, filt_dict=None):
+    def get_fas(self, site, smooth=True, roll=9, filt_dict=False):
         """
         Get the Fourier amplitude spectrum of the simulated motion by fast Fourier transformation algorithm at a given
         site.
@@ -1182,7 +1183,7 @@ class Simulation:
         plt.xlabel("Subfault No. (Along length)", fontsize=14)
         return fig
 
-    def get_vel(self, site, filt_dict=None):
+    def get_vel(self, site, filt_dict=False):
         """
         Integrates the simulated accelerogram to obtain the velocity history.
         Args:

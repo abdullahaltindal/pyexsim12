@@ -1,14 +1,14 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,047.in. Created on 2022-05-09. 
+  M7.0, filename:M7,0S100K0,03.in. Created on 2022-05-09. 
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
-  7.1 100 1 0.047 
+  7.0 100 1 0.03 
 !lat and lon of upper edge of fault
-  40.77 31.45 
+  0 0 
 !strike,dip, depth of fault
-  264.0 64.0 0.0 
+  180.0 90.0 5.0 
 !fault type (S=strikeslip; R=reverse; N=normal; U=undifferentiated)
 ! (Only used if Wells and Coppersmith is used to obtain FL and FW).
   S 
@@ -33,11 +33,11 @@
 !reference point (an upper corner)(-1.0, -1.0 for a random location);
 !number of iterations over hypocenter (need an entry, but only used if
 !either of the first two values are -1.0, indicating a random location)
-  7 3 1 
+  -1 -1 1 
 !Enter type of risetime (1=original, 2=1/f0)
  1 
 !tpadl, tpadt, delta t (length of 0pads at front and back of time series, timestep)
- 50.0 20.0 0.01 
+ 20.0 20.0 0.01 
 !beta , rho
   3.7 2.8 
 !Geometric spreading: this example is for bilinear with transition at 40km
@@ -70,11 +70,11 @@
 !frequency (-1.0, 99.0 for pgv, pga):
  -1.0 99.0 0.5 5.0 
 !Output file names stem:
-  M7,1S100K0,047 
+  M7,0S100K0,03 
 !Name of crustal amplification file:
-  crustal_dzc.txt 
+  crustal_amp_tutorial.txt 
 !Name of site amplification file:
-  site_amps_dzc.txt 
+  site_amp_tutorial.txt 
 !Name of empirical filter file:
   empirical_amps.txt 
 !DynamicFlag (0=no; use 1 for dynamic corner freq), PulsingPercent (typical 50.)
@@ -97,7 +97,7 @@
 ! even if do not assign the slip weights
   slip_weights.txt 
 !Number of Sites, site coord flag (1=lat,long; 2=R,Az; 3=N,E)
-  1 1 
+  1 2 
 !If "Y" below and strike = 0.0:
 !  if site coord flag = 2, move origin of the radial line to the midpoint of
 !                         the top edge of the fault
@@ -111,4 +111,4 @@
 !                         strike of the fault
  N 
 !Coordinates of each site
-  40.85 31.17 
+  5 30 
