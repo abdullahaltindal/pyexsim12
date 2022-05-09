@@ -442,7 +442,6 @@ class Simulation:
             tukey = filt_dict.get("tukey", 0.05)
 
         exsim_folder = self.misc.exsim_folder
-        no_of_trials = self.misc.no_of_trials
         if not self.has_run():
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
@@ -498,7 +497,7 @@ class Simulation:
             raise Exception("The simulation has not been run for the Simulation object. Please run it first "
                             "using Simulation.run() method.")
 
-        time, acc = self.get_acc(site, filt_dict=filt_dict, trial=1)
+        time, acc = self.get_acc(site, filt_dict=filt_dict, trial=trial)
         return _plot(time, acc, axis, plot_dict, plot_type="acc")
 
     def plot_rec_acc(self, site, direction, axis=None, plot_dict=None):
@@ -1212,6 +1211,33 @@ class Simulation:
         vel = integrate.cumtrapz(acc, dx=dt, initial=0)
         return time, vel
 
+    def save_acc(self, site, savename, filt_dict=False, trial=1, header=None):
+        """
+        Save the simulated acceleration array.
+        Args:
+            site (int): Site number.
+            savename (str): Filename of the saved file.
+            filt_dict: (dict) Dictionary containing filter properties. If False, no filtering operations will be applied
+            Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
+                "N": The order of the filter. Default is 4.
+                "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
+                       bandpass and bandstop filters, Wn is a length-2 sequence.
+                "btype": btype : {'lowpass', 'highpass', 'bandpass', 'bandstop'}. The type of filter.
+                                Default is 'bandpass'.
+                "tukey": Shape parameter of the Tukey window, representing the fraction of the window inside the cosine
+                tapered region.
+            trial (int): Trial number.
+            header: String that will be written at the beginning of the file (see numpy.savetxt).
+
+        Returns:
+            None
+        """
+        mw = self.source.source_spec.mw
+        dt = self.path.time_pads.delta_t
+        _, acc = self.get_acc(site=site, filt_dict=filt_dict, trial=trial)
+        if header is None:
+            header = f"EXSIM12 Simulation with Mw:\t{mw} and DT:\t{dt}"
+        np.savetxt(savename, acc, fmt="%.5e", header=header)
 
 def create_amp(freq, amp, filename, header=None, exsim_folder="exsim12"):
     """

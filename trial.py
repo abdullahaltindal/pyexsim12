@@ -36,3 +36,4 @@ sim.create_input_file(save=True)
 sim.run(override=True)
 
 #%%
+sim.save_acc(1, "x.txt")
