@@ -37,7 +37,7 @@ def _acc2disp(acc, dt):
     return disp
 
 
-def pga(sim, site, filt_dict=None):
+def pga(sim, site, filt_dict=False):
     """
     Peak ground acceleration at a given site for the Simulation object.
     Args:
@@ -61,7 +61,7 @@ def pga(sim, site, filt_dict=None):
     return np.max(np.abs(acc))
 
 
-def pgv(sim, site, filt_dict=None):
+def pgv(sim, site, filt_dict=False):
     """
     Peak ground velocity at a given site for the Simulation object.
     sim (Simulation): Simulation object.
@@ -84,7 +84,7 @@ def pgv(sim, site, filt_dict=None):
     return np.max(np.abs(_acc2vel(acc, dt)))
 
 
-def pgd(sim, site, filt_dict=None):
+def pgd(sim, site, filt_dict=False):
     """
     Peak ground displacement at a given site for the Simulation object.
     sim (Simulation): Simulation object.
@@ -107,12 +107,12 @@ def pgd(sim, site, filt_dict=None):
     return np.max(np.abs(_acc2disp(acc, dt)))
 
 
-def pgv_over_pga(sim, site, filt_dict=None):
+def pgv_over_pga(sim, site, filt_dict=False):
     """
     Ratio of peak ground velocity to peak ground acceleration.
     sim (Simulation): Simulation object.
         site (int): Site number.
-        filt_dict (dict): Dictionary containing filter properties. If False, no filtering operations will be applied
+        filt_dict (dict or bool): Dictionary containing filter properties. If False, no filter will be applied
             Missing keys will be replaced with default values. Filtering is applied with scipy.signal module. Keys are:
                 "N": The order of the filter. Default is 4.
                 "Wn": The critical frequency or frequencies. For lowpass and highpass filters, Wn is a scalar; for
@@ -128,7 +128,7 @@ def pgv_over_pga(sim, site, filt_dict=None):
     return pgv(sim, site, filt_dict) / pga(sim, site, filt_dict)
 
 
-def arias_intensity(sim, site, filt_dict=None):
+def arias_intensity(sim, site, filt_dict=False):
     """
     Arias Intensity for the input ground acceleration record, which is defined as the time integral of
     the squared acceleration, multiplied by pi over two times gravitational acceleration.
@@ -153,7 +153,7 @@ def arias_intensity(sim, site, filt_dict=None):
     return np.trapz(acc ** 2, dx=dt) * np.pi / 2 / g_const
 
 
-def significant_duration(sim, site, filt_dict=None):
+def significant_duration(sim, site, filt_dict=False):
     """
     Significant duration for the input ground acceleration record, which is defined as the time between the
      exceedance of 5% and 95% of cumulative Arias Intensity.
@@ -184,7 +184,7 @@ def significant_duration(sim, site, filt_dict=None):
     return t_sign
 
 
-def cav(sim, site, filt_dict=None):
+def cav(sim, site, filt_dict=False):
     """
     Cumulative absolute velocity for the input ground acceleration record, which is defined as the time
     integral of the absolute value of the input ground acceleration.
@@ -227,7 +227,7 @@ def _response_spec(acc, dt, xi=0.05, periods=None):
     return _spectra.response_spec(acc, dt, xi, periods)
 
 
-def predominant_period(sim, site, filt_dict=None):
+def predominant_period(sim, site, filt_dict=False):
     """
     Predominant period for the input ground acceleration record, defined as the period at the maximum spectral
     acceleration.
@@ -253,7 +253,7 @@ def predominant_period(sim, site, filt_dict=None):
     return tp
 
 
-def mean_period(sim, site, filt_dict=None):
+def mean_period(sim, site, filt_dict=False):
     """
     Mean period for the input ground acceleration record as defined by Rathje et al. (1998).
     Reference:
