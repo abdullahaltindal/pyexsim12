@@ -1239,6 +1239,7 @@ class Simulation:
             header = f"EXSIM12 Simulation with Mw:\t{mw} and DT:\t{dt}"
         np.savetxt(savename, acc, fmt="%.5e", header=header)
 
+
 def create_amp(freq, amp, filename, header=None, exsim_folder="exsim12"):
     """
     Create the amplification file for site or crustal amplification.
