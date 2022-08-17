@@ -1,4 +1,0 @@
-! Empirical filter file
-2               ! nfrequencies (frequencies, amplifications, log10 units of randomization)
-   0.100 1.000000 0.1
-  50.000 1.000000 0.1
