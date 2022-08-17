@@ -1,7 +1,0 @@
-! Site amplification filter file
-5              ! nfrequencies
-0.1953	5.115
-0.9766	7.155
-5.859	0.7477
-8.887	0.5308
-11.72	0.2812

@@ -1,5 +1,1 @@
 * Misc object cannot be shared for multiple simulations.
-
-* Prevent attempting to run the simulation if the input file is not saved.
-
-* in example for stress drop, legend says kappa instead of delta sigma

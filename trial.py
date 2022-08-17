@@ -17,7 +17,7 @@ quality_factor = QualityFactor(0.0, 88, 0.9)
 path_duration = PathDuration()
 path = Path(time_pads, crust, geometric_spreading, quality_factor, path_duration)
 
-amplification = Amplification("site_amps_dzc.txt", crustal_amp="crustal_dzc.txt",
+amplification = Amplification("site_amp_tutorial.txt", crustal_amp="crustal_amp_tutorial.txt",
                               empirical_amp="empirical_amps.txt")
 misc = Misc()
 sites = Sites([(40.85, 31.17)])
