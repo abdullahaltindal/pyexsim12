@@ -24,7 +24,5 @@ sites = Sites([(40.85, 31.17)])
 
 sim = Simulation(source, path, amplification, misc, sites)
 
-# sim.create_input_file(save=True)
+sim.create_input_file(save=True)
 sim.run()
-
-print(sim.get_rjb(1))

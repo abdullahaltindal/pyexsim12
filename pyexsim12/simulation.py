@@ -399,7 +399,7 @@ class Simulation:
         """
         inputs_filename = self.misc.inputs_filename
         exsim_folder = self.misc.exsim_folder
-        inputs_path = f"{exsim_folder}/inputs_filename"
+        inputs_path = f"{exsim_folder}/{inputs_filename}"
         if not os.path.exists(inputs_path):
             raise FileNotFoundError(f"Input file is not found in the directory: \n {inputs_path}. \n Please create "
                                     f"and save the inputs file before running. See Simulation.create_input_file method."
