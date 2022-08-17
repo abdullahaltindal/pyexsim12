@@ -1,1 +1,0 @@
-* Misc object cannot be shared for multiple simulations.
