@@ -1,7 +1,5 @@
 * Misc object cannot be shared for multiple simulations.
 
-* add trial input to get_acc
-
 * Prevent attempting to run the simulation if the input file is not saved.
 
-* save_acc
+* in example for stress drop, legend says kappa instead of delta sigma

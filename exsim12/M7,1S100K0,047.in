@@ -1,6 +1,6 @@
 !Input file for program EXSIM12
 !Title
-  M7.1, filename:M7,1S100K0,047.in. Created on 2022-05-09. 
+  M7.1, filename:M7,1S100K0,047.in. Created on 2022-08-17. 
 !Write acc, psa, husid files for each site?
  Y 
 !MW, Stress, flag (0=fmax; 1=kappa), fmax or kappa
@@ -8,7 +8,7 @@
 !lat and lon of upper edge of fault
   40.77 31.45 
 !strike,dip, depth of fault
-  264.0 64.0 0.0 
+  264.0 64.0 5.0 
 !fault type (S=strikeslip; R=reverse; N=normal; U=undifferentiated)
 ! (Only used if Wells and Coppersmith is used to obtain FL and FW).
   S 

@@ -878,7 +878,9 @@ class Simulation:
         with open(f"./{exsim_folder}/ACC/{filename}") as f:
             temp = f.readlines()
             temp = [s.strip("\n") for s in temp]
-            rjb = float(temp[13].split("   ")[-1])
+            fault_dist = float(temp[13].split("=")[-1])
+        depth = self.source.fault_geom.angles[-1]
+        rjb = np.sqrt(fault_dist**2 - depth**2)
         return rjb
 
     def _get_gmm_params(self, site, mech):

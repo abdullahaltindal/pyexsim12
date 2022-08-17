@@ -1,7 +1,7 @@
          modeling parameters     
 Fault Strike              =   264.00
 Fault dip                 =    64.00
-Fault depth to upper edge =     0.00
+Fault depth to upper edge =     5.00
 Fault Length              =    65.00
 Fault Width               =    25.00
 ratio of rupture to s-wave velocity =     0.80
@@ -12,7 +12,7 @@ No.of subs along dip      =        5
 subfault length           =     5.00
 subfault width            =     5.00
 i_rise_time (1=orig,2=1/f0) =  1
-iseed, nsims =   1665409751    3
+iseed, nsims =   1262666026    3
 -----------------------------------------------
 input hypocenter at position    =   7.000E+00  3.000E+00
 input hypocenter at subfault    =    2   1
