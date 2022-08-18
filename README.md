@@ -1,5 +1,5 @@
 # pyexsim12
-## Python package for running EXSIM12 finite-fault stochastic ground motion simulation code
+### Python package for running EXSIM12 finite-fault stochastic ground motion simulation code
 
 
 ## About
